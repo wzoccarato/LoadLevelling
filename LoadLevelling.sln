@@ -7,6 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalcExtendedLogics", "CalcE
 EndProject
 Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "SDG_Consulting", "SDG_Consulting\SDG_Consulting.sqlproj", "{6E515813-13B5-49E1-91F1-88F43F912456}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extra", "Extra", "{7C57D8E6-8004-4BCE-BEEC-A55B6B87ACDD}"
+	ProjectSection(SolutionItems) = preProject
+		Extra\AlgoritmoDiOttimizzazione.vsdx = Extra\AlgoritmoDiOttimizzazione.vsdx
+		Extra\Load Levelling DDR.docx = Extra\Load Levelling DDR.docx
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
