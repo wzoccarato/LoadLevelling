@@ -61,4 +61,7 @@
   <ItemGroup>
     <Build Include="LoadLevelling.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Populate_LoadLevelling.sql" />
+  </ItemGroup>
 </Project>
