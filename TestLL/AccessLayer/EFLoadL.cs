@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LoadL.Infrastructure
+namespace LoadL.TestLL.AccessLayer
 {
-    public class Defines
+    class EFLoadL
     {
     }
 }
