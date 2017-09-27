@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extra", "Extra", "{7C57D8E6-8004-4BCE-BEEC-A55B6B87ACDD}"
 	ProjectSection(SolutionItems) = preProject
 		Extra\AlgoritmoDiOttimizzazione.vsdx = Extra\AlgoritmoDiOttimizzazione.vsdx
+		Extra\csv2insert.sh = Extra\csv2insert.sh
 		Extra\Load Levelling DDR.docx = Extra\Load Levelling DDR.docx
 	EndProjectSection
 EndProject
