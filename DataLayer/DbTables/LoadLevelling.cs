@@ -23,20 +23,18 @@ namespace LoadL.DataLayer.DbTables
         public string Event { get; set; }
         [StringLength(6, ErrorMessage = "errore lunghezza stringa", MinimumLength = 6)]
         public string WeekPlan { get; set; }
+        public float F1 { get; set; }
+        public float F2 { get; set; }
+        public float F3 { get; set; }
         public float Ahead { get; set; }
         public float Late { get; set; }
         public float Priority { get; set; }
         public float Capacity { get; set; }
         public float Required { get; set; }
-        public short Uno { get; set; }
-        public short Due { get; set; }
-        public short Tre { get; set; }
-        public short Quattro { get; set; }
         [StringLength(10, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
         public string PlanBu { get; set; }
         [StringLength(1, ErrorMessage = "errore lunghezza stringa", MinimumLength = 1)]
         public string FlagHr { get; set; }
         public float Allocated { get; set; }
-        public float NotAllocated { get; set; }
     }
 }

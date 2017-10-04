@@ -13,6 +13,6 @@ namespace LoadL.loadDatabase.AccessLayer
             modelBuilder.Conventions.Remove<System.Data.Entity.ModelConfiguration.Conventions.PluralizingTableNameConvention>();
         }
 
-        public DbSet<LoadLevelling> EmulatorSettings { get; set; }
+        public DbSet<LoadLevelling> LoadLevellings { get; set; }
     }
 }
