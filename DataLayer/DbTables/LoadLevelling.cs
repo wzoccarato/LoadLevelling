@@ -13,28 +13,28 @@ namespace LoadL.DataLayer.DbTables
         [Key]
         public int Id { get; set; }
         [StringLength(2,ErrorMessage = "errore lunghezza stringa",MinimumLength = 2)]
-        public string ProductionCategory { get; set; }
-        public string IndSeasonalStatus { get; set; }
+        public string PRODUCTION_CATEGORY { get; set; }
+        public string IND_SEASONAL_STATUS { get; set; }
         [StringLength(6, ErrorMessage = "errore lunghezza stringa", MinimumLength = 6)]
-        public string TckWeek { get; set; }
+        public string TCH_WEEK { get; set; }
         [StringLength(10, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
-        public string PlanningLevel { get; set; }
+        public string PLANNING_LEVEL { get; set; }
         [StringLength(10, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
         public string Event { get; set; }
         [StringLength(6, ErrorMessage = "errore lunghezza stringa", MinimumLength = 6)]
-        public string WeekPlan { get; set; }
-        public float F1 { get; set; }
-        public float F2 { get; set; }
-        public float F3 { get; set; }
-        public float Ahead { get; set; }
-        public float Late { get; set; }
-        public float Priority { get; set; }
-        public float Capacity { get; set; }
-        public float Required { get; set; }
+        public string WEEK_PLAN { get; set; }
+        public double F1 { get; set; }
+        public double F2 { get; set; }
+        public double F3 { get; set; }
+        public double Ahead { get; set; }
+        public double Late { get; set; }
+        public double Priority { get; set; }
+        public double Capacity { get; set; }
+        public double Required { get; set; }
         [StringLength(10, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
-        public string PlanBu { get; set; }
+        public string PLAN_BU { get; set; }
         [StringLength(1, ErrorMessage = "errore lunghezza stringa", MinimumLength = 1)]
-        public string FlagHr { get; set; }
-        public float Allocated { get; set; }
+        public string FLAG_HR { get; set; }
+        public double Allocated { get; set; }
     }
 }

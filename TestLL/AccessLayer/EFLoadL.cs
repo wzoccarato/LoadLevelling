@@ -19,7 +19,6 @@ namespace LoadL.TestLL.AccessLayer
         #region LoadLevelling table
 
         public IQueryable<LoadLevelling> LoadLevellingTable => _context.LoadLevellings;
-
         public Database LLDatabase => _context.Database;
 
         #endregion

@@ -59,6 +59,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CalcExtendedLogics\CalcExtendedLogics.csproj">
+      <Project>{da9f66a2-c73d-42d8-bea5-7cd09bb49700}</Project>
+      <Name>CalcExtendedLogics</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DataLayer\DataLayer.csproj">
       <Project>{bc37ffe4-fd6c-4bdd-88f6-e43fd67411f7}</Project>
       <Name>DataLayer</Name>
