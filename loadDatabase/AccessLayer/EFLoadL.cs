@@ -19,6 +19,7 @@ namespace LoadL.loadDatabase.AccessLayer
         #region LoadLevelling table
 
         public IQueryable<LoadLevelling> LoadLevellingTable => _context.LoadLevellings;
+        public IQueryable<Schema> SchemaTable => _context.Schema;
         public Database LLDatabase => _context.Database;
 
         #endregion

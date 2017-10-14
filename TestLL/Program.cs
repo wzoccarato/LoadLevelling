@@ -23,12 +23,15 @@ namespace LoadL.TestLL
             CalcExLogicClass celc = new CalcExLogicClass();
 
             DataTable dt = LINQToDataTable(Iloadlevelling.LoadLevellingTable);
-            dt.TableName = "LoadLevelling";
+            dt.TableName = "LoadLevelling";     // il nome della tabella nel db
+            DataTable schema = LINQToDataTable(Iloadlevelling.SchemaTable);
+            schema.TableName = "Schema";
 
             DataSet ds = new DataSet();
             ds.Tables.Add(dt);
+            ds.Tables.Add(schema);
 
-            celc.Execute(ds, "goz", "LoadLevelling");
+            celc.Execute(ds, "LoadL", "LoadLevelling");
         }
 
         /// <summary>

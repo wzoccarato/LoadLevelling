@@ -43,6 +43,7 @@
   <ItemGroup>
     <Compile Include="DbTables\EFLoadLevelling.cs" />
     <Compile Include="DbTables\LoadLevelling.cs" />
+    <Compile Include="DbTables\Schema.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

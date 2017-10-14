@@ -14,5 +14,6 @@ namespace LoadL.loadDatabase.AccessLayer
         }
 
         public DbSet<LoadLevelling> LoadLevellings { get; set; }
+        public DbSet<Schema> Schema { get; set; }
     }
 }

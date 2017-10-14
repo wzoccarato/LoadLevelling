@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Operations Version="1.0" xmlns="http://schemas.microsoft.com/sqlserver/dac/Serialization/2012/02">
+  <Operation Name="Rename Refactor" Key="ec82fe37-0f8d-4da3-8e07-c7daf14dd5f7" ChangeDateTime="10/06/2017 15:34:40">
+    <Property Name="ElementName" Value="[dbo].[Schema].[BlockID]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[Schema]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="BlockId" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="b8dd4788-b916-42f7-9a78-d4aa6af86336" ChangeDateTime="10/13/2017 15:01:23">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[F1]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="a" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="3bbf9461-c960-44fe-83b6-05ca8346ec8f" ChangeDateTime="10/13/2017 15:01:25">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[F2]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="b" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="195ef7d6-10fd-44ff-b460-f5a6a91ca87f" ChangeDateTime="10/13/2017 15:01:28">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[F3]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="c" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="1484b42c-6f1f-449c-9c22-2df262151957" ChangeDateTime="10/13/2017 15:01:31">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[Ahead]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="d" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="51172481-5988-4859-96a9-6c0d51bc4af3" ChangeDateTime="10/13/2017 15:01:36">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[Late]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="e" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="695b407d-e52d-441d-935e-d300f25fa724" ChangeDateTime="10/13/2017 15:01:45">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[Priority]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="f" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="b4041170-f184-49e3-b4b0-0575ff20cd66" ChangeDateTime="10/13/2017 15:01:49">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[Capacity]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="g" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="04d20f9b-ddc9-40dc-96ce-5da4f96563b3" ChangeDateTime="10/13/2017 15:01:54">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[Required]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="h" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="a7083386-9b9a-409d-95e6-3121bb547753" ChangeDateTime="10/13/2017 15:01:58">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[PLAN_BU]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="i" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="d4a237c2-14db-4b6d-99a9-df14ca5ad8c0" ChangeDateTime="10/13/2017 15:02:05">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[FLAG_HR]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="j" />
+  </Operation>
+  <Operation Name="Rename Refactor" Key="a48615ae-9033-4b09-983a-e3966f770000" ChangeDateTime="10/13/2017 15:02:07">
+    <Property Name="ElementName" Value="[dbo].[LoadLevelling].[ALLOCATED]" />
+    <Property Name="ElementType" Value="SqlSimpleColumn" />
+    <Property Name="ParentElementName" Value="[dbo].[LoadLevelling]" />
+    <Property Name="ParentElementType" Value="SqlTable" />
+    <Property Name="NewName" Value="k" />
+  </Operation>
+</Operations>

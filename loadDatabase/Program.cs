@@ -33,15 +33,15 @@ namespace LoadL.loadDatabase
         [PLANNING_LEVEL],
         [EVENT],
         [WEEK_PLAN],
-        [F1],[F2],[F3],
-        [Ahead],
-        [Late],
-        [Priority],
-        [Capacity],
-        [Required],
-        [PLAN_BU],
-        [FLAG_HR],
-        [ALLOCATED])
+        [a],[b],[c],
+        [d],
+        [e],
+        [f],
+        [g],
+        [h],
+        [i],
+        [j],
+        [k])
         VALUES";
 
         /// <summary>

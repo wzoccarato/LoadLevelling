@@ -10,7 +10,8 @@ namespace LoadL.Infrastructure.Abstract
 {
     public interface ILoadL
     {
-        IQueryable<LoadLevelling> LoadLevellingTable { get; }   // get the full LoadLevelling table
+        IQueryable<LoadLevelling> LoadLevellingTable { get; }           // get full LoadLevelling table
+        IQueryable<Schema> SchemaTable { get; }                   // get full Schema table 
         Database LLDatabase { get; }                              // ritorna il database rappresentato dal DbContext
     }
 }
