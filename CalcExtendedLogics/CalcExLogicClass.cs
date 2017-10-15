@@ -87,11 +87,22 @@ namespace LoadL.CalcExtendedLogics
                         targetdt.Columns[index["j"]].ColumnName = flag_hr;
                         targetdt.Columns[index["k"]].ColumnName = allocated;
 
-                        var query = from rec in loadLevelling group rec by rec.PLAN_BU into g orderby g.Count() descending select g;
+                        var planbuq = from rec in loadLevelling group rec by rec.PLAN_BU into g orderby g.Count() descending select g.Distinct() ;
                         
-                        foreach (var record in query)
+                        // inizialmente raggruppa per PLAN_BU
+                        //foreach (var record in planbuq)
+                        //{
+                        //    var p = record.Where(r => r.FLAG_HR != null).Select(r => r).ToList();
+                        //    foreach (var q in p)
+                        //    {
+                        //        var ccc = q.FLAG_HR;
+                        //    }
+                        //}
+
+                        var produzioni = loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(f => f.Distinct()).ToList();
+                        foreach (var rec in produzioni)
                         {
-                            var p = record.Where(r => r.FLAG_HR != null).Select(r => r).ToList();
+                            var p = rec.Where(r => r.FLAG_HR != null).Select(r => r).ToList();
                             foreach (var q in p)
                             {
                                 var ccc = q.FLAG_HR;
