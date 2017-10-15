@@ -11,14 +11,18 @@ namespace LoadL.CalcExtendedLogics
 {
     public class CalcExLogicClass
     {
-        #region ctor
+        private IList<LlWorkRecord> _loadLevelling;
 
+        #region ctor
 
         public CalcExLogicClass()
         {
+            this._loadLevelling = new List<LlWorkRecord>();
             // TODO inizializzazioni qui
         }
         #endregion
+
+        #region metodi pubblici
         public bool Execute(DataSet dataset, string requiredoperation, string targetdatatablename)
         {
             try
@@ -32,6 +36,7 @@ namespace LoadL.CalcExtendedLogics
 
                         var schema = ConvertDataTable<Schema>(schemadt);
 
+                        // acquisisce i valori degli heading dalla tabella chema
                         var f1 = schema.Where(x => x.BlockId == Alias[LlAlias.F1]).Select(r => r.Heading).First();
                         var f2 = schema.Where(x => x.BlockId == Alias[LlAlias.F2]).Select(r => r.Heading).First();
                         var f3 = schema.Where(x => x.BlockId == Alias[LlAlias.F3]).Select(r => r.Heading).First();
@@ -44,6 +49,8 @@ namespace LoadL.CalcExtendedLogics
                         var flag_hr = schema.Where(x => x.BlockId == Alias[LlAlias.FlagHr]).Select(r => r.Heading).First();
                         var allocated = schema.Where(x => x.BlockId == Alias[LlAlias.Allocated]).Select(r => r.Heading).First();
 
+                        // questo trascodifica dagli heding della tabella passata in argomento, agli 
+                        // heading utilizzati internamente, per semplicita' di gestione
                         Dictionary<string, string> remap = new Dictionary<string, string>()
                         {
                             {targetdt.Columns[index["a"]].ColumnName,"F1"},
@@ -59,6 +66,7 @@ namespace LoadL.CalcExtendedLogics
                             {targetdt.Columns[index["k"]].ColumnName,"Allocated"}
                         };
                         
+                        // assegna gli headeng, come definiti sopra
                         targetdt.Columns[index["a"]].ColumnName = remap[targetdt.Columns[index["a"]].ColumnName];
                         targetdt.Columns[index["b"]].ColumnName = remap[targetdt.Columns[index["b"]].ColumnName];
                         targetdt.Columns[index["c"]].ColumnName = remap[targetdt.Columns[index["c"]].ColumnName];
@@ -71,10 +79,13 @@ namespace LoadL.CalcExtendedLogics
                         targetdt.Columns[index["j"]].ColumnName = remap[targetdt.Columns[index["j"]].ColumnName];
                         targetdt.Columns[index["k"]].ColumnName = remap[targetdt.Columns[index["k"]].ColumnName];
 
+                        // converte la tabella in IList. Questa e' la copia di lavoro interna 
+                        // della tabella
+                        _loadLevelling = ConvertDataTable<LlWorkRecord>(targetdt);
 
-                        var loadLevelling = ConvertDataTable<LlWorkTable>(targetdt);
 
-
+                        // assegna alla tabella originale gli heading definitivi,
+                        // quelli assegnati dalla tabella Schema
                         targetdt.Columns[index["a"]].ColumnName = f1;
                         targetdt.Columns[index["b"]].ColumnName = f2;
                         targetdt.Columns[index["c"]].ColumnName = f3;
@@ -87,19 +98,8 @@ namespace LoadL.CalcExtendedLogics
                         targetdt.Columns[index["j"]].ColumnName = flag_hr;
                         targetdt.Columns[index["k"]].ColumnName = allocated;
 
-                        var planbuq = from rec in loadLevelling group rec by rec.PLAN_BU into g orderby g.Count() descending select g.Distinct() ;
-                        
-                        // inizialmente raggruppa per PLAN_BU
-                        //foreach (var record in planbuq)
-                        //{
-                        //    var p = record.Where(r => r.FLAG_HR != null).Select(r => r).ToList();
-                        //    foreach (var q in p)
-                        //    {
-                        //        var ccc = q.FLAG_HR;
-                        //    }
-                        //}
-
-                        var produzioni = loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(f => f.Distinct()).ToList();
+                        //var produzioni = from rec in loadLevelling group rec by rec.PLAN_BU into g orderby g.Count() descending select g.Distinct();
+                        var produzioni = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(f => f.Distinct()).ToList();
                         foreach (var rec in produzioni)
                         {
                             var p = rec.Where(r => r.FLAG_HR != null).Select(r => r).ToList();
@@ -121,7 +121,14 @@ namespace LoadL.CalcExtendedLogics
             }
 
         }
-        //private GroupAndSort()
+        #endregion
+
+        #region metodi privati
+
+        private void Initialize(DataTable loadlevelling, DataTable schema)
+        {
+            
+        }
 
 
         /// <summary>
@@ -164,5 +171,6 @@ namespace LoadL.CalcExtendedLogics
             }
             return obj;
         }
+        #endregion
     }
 }

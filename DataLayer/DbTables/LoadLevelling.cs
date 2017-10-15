@@ -41,7 +41,7 @@ namespace LoadL.DataLayer.DbTables
     // identica alla precedente, ma utilizzata per l'elaborazione interna
     // i nomi dei campi variabili sono parlanti, in modo da semplificare la
     // comprensione del codice
-    public class LlWorkTable
+    public class LlWorkRecord
     {
         [Key]
         public int Id { get; set; }
