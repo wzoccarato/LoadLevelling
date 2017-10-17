@@ -49,6 +49,10 @@
       <Project>{bc37ffe4-fd6c-4bdd-88f6-e43fd67411f7}</Project>
       <Name>DataLayer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Infrastructure\Infrastructure.csproj">
+      <Project>{6dcddacc-b95e-4a2d-bb93-5f798e8e6f1f}</Project>
+      <Name>Infrastructure</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

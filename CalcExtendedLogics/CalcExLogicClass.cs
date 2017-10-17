@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using LoadL.DataLayer.DbTables;
+using LoadL.Infrastructure;
 using static LoadL.CalcExtendedLogics.Global;
 
 namespace LoadL.CalcExtendedLogics
@@ -14,10 +16,11 @@ namespace LoadL.CalcExtendedLogics
     public class CalcExLogicClass
     {
         private IList<LlWorkRecord> _loadLevelling;
-        private IList<Schema> _schema;
-        private IList<string>_plan_bu;
-        private IList<string> _flag_hr;
-        private IList<LlWorkRecord> _singleRun;
+        private IList<Schema> _schema;          // lista contenente la conversione della DataTable Schema
+        private IList<string>_plan_bu;          // lista contenente tutti i PLAN_BU distinct
+        private IList<string> _flag_hr;         // lista contenente tutti i FLAG_HR distinct
+        private IList<LlWorkRecord> _waitList;  // contiene tutti i record relativi alle week in attesa per l'elaborazione
+        //private IList
 
         #region ctor
 
@@ -29,7 +32,7 @@ namespace LoadL.CalcExtendedLogics
 
             _plan_bu = new List<string>();
             _flag_hr = new List<string>();
-            _singleRun = new List<LlWorkRecord>();
+            _waitList = new List<LlWorkRecord>();
             // TODO inizializzazioni qui
         }
         #endregion
@@ -37,6 +40,7 @@ namespace LoadL.CalcExtendedLogics
         #region metodi pubblici
         public bool Execute(DataSet dataset, string requiredoperation, string targetdatatablename)
         {
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
                 switch (requiredoperation)
@@ -47,65 +51,7 @@ namespace LoadL.CalcExtendedLogics
 
                         Initialize(targetdt, schemadt);
 
-                        //var produzioni = from rec in loadLevelling group rec by rec.PLAN_BU into g orderby g.Count() descending select g.Distinct();
-                        //_plan_bu = (IList<LlWorkRecord>)_loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(f => f.Distinct()).ToList();
-
-                        //var pbu = from r in _loadLevelling
-                        //          group r by r.PLAN_BU
-                        //          into g
-                        //          orderby g.Count() descending, g.Key
-                        //          select new
-                        //                 {
-                        //                     planbu = g.Key,
-                        //                     count = g.Count()
-                        //                 };
-
-                        // PLAN_BU
-                        //var pbu =_loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => new {planbu = l.Key, count = l.Count()});
-                        _plan_bu = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => l.Key).ToList();
-                        
-                        foreach (var rec in _plan_bu)
-                        {
-                            //Console.WriteLine($"planbu = {rec.planbu}, count = {rec.count}");
-                            Console.WriteLine($"planbu = {rec}");
-
-                            // FLAG_HR
-                            //var flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => new {flag_hr = l.Key, count = l.Count()});
-                            _flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).ToList();
-
-                            foreach (var fhr in _flag_hr)
-                            {
-                                //Console.WriteLine($"flaghr = {fhr.flag_hr}, count = {fhr.count}");
-                                Console.WriteLine($"flaghr = {fhr}");
-
-                                // PRODUCTION_CATEGORY
-                                var prod_category = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
-
-                                Console .WriteLine("Premere un tasto...");
-                                Console.ReadKey();
-
-                                foreach (var pc in prod_category)
-                                {
-                                    var ll = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr && r.PRODUCTION_CATEGORY == pc).Select(rr => rr).ToList();
-
-                                    foreach (var rc in ll)
-                                    {
-                                        Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}");
-                                    }
-
-                                    // ordina per WEEK_PLAN e poi per Piority
-                                    //var priority = ll.OrderBy(g => g.).OrderBy(h => h.WEEK_PLAN).ToList();
-
-                                    //foreach (var p in priority)
-                                    //{
-                                    //    Console.WriteLine($"prodcat = {p.PRODUCTION_CATEGORY}, week_plan = {p.WEEK_PLAN}, priority = {p.Priority}");
-                                    //}
-
-                                }
-
-                            }
-                        }
-
+                        OptimizeWorkload();
 
                         break;
                     default:
@@ -113,11 +59,18 @@ namespace LoadL.CalcExtendedLogics
                 }
                 return true; 
             }
-            catch (Exception ex)
+            catch (TraceException e)
             {
-                throw;
+                Console.WriteLine(e.TraceMessage);
+                // throw
+                return false;
             }
-
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                //throw new TraceException(fname, e.Message);
+                return false;
+            }
         }
         #endregion
 
@@ -136,24 +89,29 @@ namespace LoadL.CalcExtendedLogics
         /// </param>
         private void Initialize(DataTable loadlevellingdt, DataTable schemadt)
         {
-            _schema = ConvertDataTable<Schema>(schemadt);
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
 
-            // acquisisce i valori degli heading dalla tabella schema
-            var f1 = _schema.Where(x => x.BlockId == Alias[LlAlias.F1]).Select(r => r.Heading).First();
-            var f2 = _schema.Where(x => x.BlockId == Alias[LlAlias.F2]).Select(r => r.Heading).First();
-            var f3 = _schema.Where(x => x.BlockId == Alias[LlAlias.F3]).Select(r => r.Heading).First();
-            var ahead = _schema.Where(x => x.BlockId == Alias[LlAlias.Ahead]).Select(r => r.Heading).First();
-            var late = _schema.Where(x => x.BlockId == Alias[LlAlias.Late]).Select(r => r.Heading).First();
-            var priority = _schema.Where(x => x.BlockId == Alias[LlAlias.Priority]).Select(r => r.Heading).First();
-            var capacity = _schema.Where(x => x.BlockId == Alias[LlAlias.Capacity]).Select(r => r.Heading).First();
-            var required = _schema.Where(x => x.BlockId == Alias[LlAlias.Required]).Select(r => r.Heading).First();
-            var planBu = _schema.Where(x => x.BlockId == Alias[LlAlias.PlanBu]).Select(r => r.Heading).First();
-            var flagHr = _schema.Where(x => x.BlockId == Alias[LlAlias.FlagHr]).Select(r => r.Heading).First();
-            var allocated = _schema.Where(x => x.BlockId == Alias[LlAlias.Allocated]).Select(r => r.Heading).First();
+            try
+            {
 
-            // questo trascodifica dagli heding della tabella passata in argomento, agli 
-            // heading utilizzati internamente, per semplicita' di gestione
-            Dictionary<string, string> remap = new Dictionary<string, string>()
+                _schema = ConvertDataTable<Schema>(schemadt);
+
+                // acquisisce i valori degli heading dalla tabella schema
+                var f1 = _schema.Where(x => x.BlockId == Alias[LlAlias.F1]).Select(r => r.Heading).First();
+                var f2 = _schema.Where(x => x.BlockId == Alias[LlAlias.F2]).Select(r => r.Heading).First();
+                var f3 = _schema.Where(x => x.BlockId == Alias[LlAlias.F3]).Select(r => r.Heading).First();
+                var ahead = _schema.Where(x => x.BlockId == Alias[LlAlias.Ahead]).Select(r => r.Heading).First();
+                var late = _schema.Where(x => x.BlockId == Alias[LlAlias.Late]).Select(r => r.Heading).First();
+                var priority = _schema.Where(x => x.BlockId == Alias[LlAlias.Priority]).Select(r => r.Heading).First();
+                var capacity = _schema.Where(x => x.BlockId == Alias[LlAlias.Capacity]).Select(r => r.Heading).First();
+                var required = _schema.Where(x => x.BlockId == Alias[LlAlias.Required]).Select(r => r.Heading).First();
+                var planBu = _schema.Where(x => x.BlockId == Alias[LlAlias.PlanBu]).Select(r => r.Heading).First();
+                var flagHr = _schema.Where(x => x.BlockId == Alias[LlAlias.FlagHr]).Select(r => r.Heading).First();
+                var allocated = _schema.Where(x => x.BlockId == Alias[LlAlias.Allocated]).Select(r => r.Heading).First();
+
+                // questo trascodifica dagli heding della tabella passata in argomento, agli 
+                // heading utilizzati internamente, per semplicita' di gestione
+                Dictionary<string, string> remap = new Dictionary<string, string>()
                                                {
                                                    {loadlevellingdt.Columns[index["a"]].ColumnName, "F1"},
                                                    {loadlevellingdt.Columns[index["b"]].ColumnName, "F2"},
@@ -168,36 +126,217 @@ namespace LoadL.CalcExtendedLogics
                                                    {loadlevellingdt.Columns[index["k"]].ColumnName, "Allocated"}
                                                };
 
-            // assegna gli heading, come definiti sopra
-            loadlevellingdt.Columns[index["a"]].ColumnName = remap[loadlevellingdt.Columns[index["a"]].ColumnName];
-            loadlevellingdt.Columns[index["b"]].ColumnName = remap[loadlevellingdt.Columns[index["b"]].ColumnName];
-            loadlevellingdt.Columns[index["c"]].ColumnName = remap[loadlevellingdt.Columns[index["c"]].ColumnName];
-            loadlevellingdt.Columns[index["d"]].ColumnName = remap[loadlevellingdt.Columns[index["d"]].ColumnName];
-            loadlevellingdt.Columns[index["e"]].ColumnName = remap[loadlevellingdt.Columns[index["e"]].ColumnName];
-            loadlevellingdt.Columns[index["f"]].ColumnName = remap[loadlevellingdt.Columns[index["f"]].ColumnName];
-            loadlevellingdt.Columns[index["g"]].ColumnName = remap[loadlevellingdt.Columns[index["g"]].ColumnName];
-            loadlevellingdt.Columns[index["h"]].ColumnName = remap[loadlevellingdt.Columns[index["h"]].ColumnName];
-            loadlevellingdt.Columns[index["i"]].ColumnName = remap[loadlevellingdt.Columns[index["i"]].ColumnName];
-            loadlevellingdt.Columns[index["j"]].ColumnName = remap[loadlevellingdt.Columns[index["j"]].ColumnName];
-            loadlevellingdt.Columns[index["k"]].ColumnName = remap[loadlevellingdt.Columns[index["k"]].ColumnName];
+                // assegna gli heading, come definiti sopra
+                loadlevellingdt.Columns[index["a"]].ColumnName = remap[loadlevellingdt.Columns[index["a"]].ColumnName];
+                loadlevellingdt.Columns[index["b"]].ColumnName = remap[loadlevellingdt.Columns[index["b"]].ColumnName];
+                loadlevellingdt.Columns[index["c"]].ColumnName = remap[loadlevellingdt.Columns[index["c"]].ColumnName];
+                loadlevellingdt.Columns[index["d"]].ColumnName = remap[loadlevellingdt.Columns[index["d"]].ColumnName];
+                loadlevellingdt.Columns[index["e"]].ColumnName = remap[loadlevellingdt.Columns[index["e"]].ColumnName];
+                loadlevellingdt.Columns[index["f"]].ColumnName = remap[loadlevellingdt.Columns[index["f"]].ColumnName];
+                loadlevellingdt.Columns[index["g"]].ColumnName = remap[loadlevellingdt.Columns[index["g"]].ColumnName];
+                loadlevellingdt.Columns[index["h"]].ColumnName = remap[loadlevellingdt.Columns[index["h"]].ColumnName];
+                loadlevellingdt.Columns[index["i"]].ColumnName = remap[loadlevellingdt.Columns[index["i"]].ColumnName];
+                loadlevellingdt.Columns[index["j"]].ColumnName = remap[loadlevellingdt.Columns[index["j"]].ColumnName];
+                loadlevellingdt.Columns[index["k"]].ColumnName = remap[loadlevellingdt.Columns[index["k"]].ColumnName];
 
-            // converte la tabella in IList. Questa e' la copia di lavoro interna 
-            // della tabella
-            _loadLevelling = ConvertDataTable<LlWorkRecord>(loadlevellingdt);
+                // converte la tabella in IList. Questa e' la copia di lavoro interna 
+                // della tabella
+                _loadLevelling = ConvertDataTable<LlWorkRecord>(loadlevellingdt);
 
-            // assegna alla tabella originale gli heading definitivi,
-            // quelli ricavati dalla tabella Schema
-            loadlevellingdt.Columns[index["a"]].ColumnName = f1;
-            loadlevellingdt.Columns[index["b"]].ColumnName = f2;
-            loadlevellingdt.Columns[index["c"]].ColumnName = f3;
-            loadlevellingdt.Columns[index["d"]].ColumnName = ahead;
-            loadlevellingdt.Columns[index["e"]].ColumnName = late;
-            loadlevellingdt.Columns[index["f"]].ColumnName = priority;
-            loadlevellingdt.Columns[index["g"]].ColumnName = capacity;
-            loadlevellingdt.Columns[index["h"]].ColumnName = required;
-            loadlevellingdt.Columns[index["i"]].ColumnName = planBu;
-            loadlevellingdt.Columns[index["j"]].ColumnName = flagHr;
-            loadlevellingdt.Columns[index["k"]].ColumnName = allocated;
+                // assegna alla tabella originale gli heading definitivi,
+                // quelli ricavati dalla tabella Schema
+                loadlevellingdt.Columns[index["a"]].ColumnName = f1;
+                loadlevellingdt.Columns[index["b"]].ColumnName = f2;
+                loadlevellingdt.Columns[index["c"]].ColumnName = f3;
+                loadlevellingdt.Columns[index["d"]].ColumnName = ahead;
+                loadlevellingdt.Columns[index["e"]].ColumnName = late;
+                loadlevellingdt.Columns[index["f"]].ColumnName = priority;
+                loadlevellingdt.Columns[index["g"]].ColumnName = capacity;
+                loadlevellingdt.Columns[index["h"]].ColumnName = required;
+                loadlevellingdt.Columns[index["i"]].ColumnName = planBu;
+                loadlevellingdt.Columns[index["j"]].ColumnName = flagHr;
+                loadlevellingdt.Columns[index["k"]].ColumnName = allocated;
+            }
+            catch (TraceException e)
+            {
+                Console.WriteLine(e.TraceMessage);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw new TraceException(fname, e.Message);
+            }
+
+        }
+
+        /// <summary>
+        /// opera sulla lista _loadLevelling
+        /// 1. Estrae una lista distinct di tutti i PLAN_BU (identificativo della produzione)
+        /// 2. per il PLAN_BU estratto, estrae una lista distinct di tutti i FLAG_HR (Flag high rotation)
+        /// 3. per il PLAN_BU estratto e il FLAG_HR estratto, estrae una lista distinct di tutti i PRODUCTION_CATEGORY (Categoria di produzione)
+        /// 4. per il PLAN_BU estratto, il FLAG_HR estratto, per ciascuna PRODUCTION_CATEGORY estrae tutti i relativi record dalla liata LoadLevelling 
+        /// 5. La lista cosi' ottenuta viene ordinata per WEEK_PLAN crescente e per Priority crescente (priorita' piu' alta a valore piu' basso)
+        /// 6. di questa lista viene poi eleborata una settimana alla volta
+        /// </summary>
+        private void OptimizeWorkload()
+        {
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
+
+            try
+            {
+                //var pbu = from r in _loadLevelling
+                //          group r by r.PLAN_BU
+                //          into g
+                //          orderby g.Count() descending, g.Key
+                //          select new
+                //                 {
+                //                     planbu = g.Key,
+                //                     count = g.Count()
+                //                 };
+
+                // PLAN_BU
+                //var pbu =_loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => new {planbu = l.Key, count = l.Count()});
+                _plan_bu = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => l.Key).ToList();
+
+                foreach (var rec in _plan_bu)
+                {
+                    //Console.WriteLine($"planbu = {rec.planbu}, count = {rec.count}");
+                    Console.WriteLine($"planbu = {rec}");
+
+                    // FLAG_HR
+                    //var flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => new {flag_hr = l.Key, count = l.Count()});
+                    _flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).ToList();
+
+                    foreach (var fhr in _flag_hr)
+                    {
+                        //Console.WriteLine($"flaghr = {fhr.flag_hr}, count = {fhr.count}");
+                        Console.WriteLine($"flaghr = {fhr}");
+
+                        // PRODUCTION_CATEGORY
+                        var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
+
+                        foreach (var pc in prodCategory)
+                        {
+                            Console.WriteLine($"Production_category = {pc}");
+
+                            //Console.WriteLine("Premere un tasto...");
+                            //Console.ReadKey();
+
+                            var ll = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr && r.PRODUCTION_CATEGORY == pc).Select(rr => rr).ToList();
+
+                            //foreach (var rc in ll)
+                            //{
+                            //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}");
+                            //}
+
+                            // ordina per WEEK_PLAN e poi per Priority
+                            var sortedtable = ll.OrderBy(g => g.WEEK_PLAN).ThenBy(h => h.Priority).ToList();
+
+                            if (sortedtable.Count > 0)
+                            {
+                                do
+                                {
+                                    var wte = sortedtable.ElementAt(0).WEEK_PLAN;
+
+                                    //Console.WriteLine($"wte = {wte}");
+                                    //Console.WriteLine("Premere un tasto...");
+                                    //Console.ReadKey();
+
+                                    // estrae dalla lista sortata soltanto i record relativi alla 
+                                    // week che deve essere elaborata. Questa lista e' gia' ordinata per 
+                                    // priorita' decrescente (crescente in senso numerico).
+                                    IList<LlWorkRecord> toelaborate = sortedtable.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
+                                    Console.WriteLine($"record della WEEK {wte} totali da elaborare: {toelaborate.Count}");
+                                    IList<LlWorkRecord> toelaborate1 = sortedtable.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
+                                    Console.WriteLine($"record della WEEK {wte} con \"Required\" diverso da 0: {toelaborate1.Count}");
+                                    // elabora la week contenuta nella lista ordinata.
+                                    ElabPresentWeek(toelaborate);
+                                    // rimuove da sortedtable i records appena elaborati
+                                    sortedtable.RemoveAll(r => r.WEEK_PLAN == wte);
+
+                                    //Console.WriteLine($"prossimo = {toelaborate.ElementAt(0).WEEK_PLAN}");
+                                    //Console.WriteLine("Premere un tasto...");
+                                    //Console.ReadKey();
+                                    //foreach (var rc in toelaborate)
+                                    //{
+                                    //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcategory = {rc.PRODUCTION_CATEGORY}, WEEK_PLAN = {rc.WEEK_PLAN}, Priority = {rc.Priority}");
+                                    //}
+                                } while (sortedtable.Count > 0);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (TraceException e)
+            {
+                Console.WriteLine(e.TraceMessage);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw new TraceException(fname, e.Message);
+            }
+        }
+
+        private void ElabPresentWeek(IList<LlWorkRecord> toelaborate)
+        {
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
+            try
+            {
+                if (toelaborate.Count > 0)
+                {
+                    // verifica di consistenza. si puo' togliere una volta consolidata
+                    var ll = toelaborate.Select(r => r.Capacity).Distinct().ToList();
+                    if (ll.Count > 1)
+                    {
+                        Console.WriteLine($"Capacy non è la stessa per tutta la WEEK_PLAN. Week = {toelaborate[0].WEEK_PLAN}, Count = {ll.Count}" );
+                        for(int i=0;i<ll.Count;i++)
+                        {
+                            Console.WriteLine($"Capacity_{i} = {ll[i]}");
+                        }
+                        //throw new TraceException(fname,
+                        //    $"Capacy non è la stessa per tutta la WEEK_PLAN. Week = {toelaborate[0].WEEK_PLAN}");
+                    }
+                    if (toelaborate[0].Capacity > 0)
+                    {
+                        // prima elabora le richieste in attesa, poi elabora
+                        // la settimana che e' stata passata in argomento
+                        IList<LlWorkRecord> waiting = GetWaitingRequests();
+                        if (waiting.Count > 0)
+                        {
+                            foreach (var rec in waiting)
+                            {
+                                
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // solo per le richieste relative alla settimana in elaborazione
+                        // prenota i records per l'elaborazione "Late"
+                        // la richiesta viene accodata per l'elaborazione successiva
+                        // QueueRequests
+                    }
+                }
+            }
+            catch (TraceException e)
+            {
+                Console.WriteLine(e.TraceMessage);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw new TraceException(fname, e.Message);
+            }
+        }
+
+        private IList<LlWorkRecord> GetWaitingRequests()
+        {
+            return new List<LlWorkRecord>();
+            //throw new NotImplementedException();
         }
 
         /// <summary>
