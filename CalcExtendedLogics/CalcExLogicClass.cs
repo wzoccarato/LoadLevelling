@@ -15,24 +15,24 @@ namespace LoadL.CalcExtendedLogics
 {
     public class CalcExLogicClass
     {
-        private IList<LlWorkRecord> _loadLevelling;
+        private IList<LoadLevellingWork> _loadLevelling;
         private IList<Schema> _schema;          // lista contenente la conversione della DataTable Schema
         private IList<string>_plan_bu;          // lista contenente tutti i PLAN_BU distinct
         private IList<string> _flag_hr;         // lista contenente tutti i FLAG_HR distinct
-        private IList<LlWorkRecord> _waitList;  // contiene tutti i record relativi alle week in attesa per l'elaborazione
+        private IList<LoadLevellingWork> _waitList;  // contiene tutti i record relativi alle week in attesa per l'elaborazione
         //private IList
 
         #region ctor
 
         public CalcExLogicClass()
         {
-            _loadLevelling = new List<LlWorkRecord>();
+            _loadLevelling = new List<LoadLevellingWork>();
             _schema = new List<Schema>();
-            //_plan_bu = new List<LlWorkRecord>();
+            //_plan_bu = new List<LoadLevellingWork>();
 
             _plan_bu = new List<string>();
             _flag_hr = new List<string>();
-            _waitList = new List<LlWorkRecord>();
+            _waitList = new List<LoadLevellingWork>();
             // TODO inizializzazioni qui
         }
         #endregion
@@ -113,49 +113,49 @@ namespace LoadL.CalcExtendedLogics
                 // heading utilizzati internamente, per semplicita' di gestione
                 Dictionary<string, string> remap = new Dictionary<string, string>()
                                                {
-                                                   {loadlevellingdt.Columns[index["a"]].ColumnName, "F1"},
-                                                   {loadlevellingdt.Columns[index["b"]].ColumnName, "F2"},
-                                                   {loadlevellingdt.Columns[index["c"]].ColumnName, "F3"},
-                                                   {loadlevellingdt.Columns[index["d"]].ColumnName, "Ahead"},
-                                                   {loadlevellingdt.Columns[index["e"]].ColumnName, "Late"},
-                                                   {loadlevellingdt.Columns[index["f"]].ColumnName, "Priority"},
-                                                   {loadlevellingdt.Columns[index["g"]].ColumnName, "Capacity"},
-                                                   {loadlevellingdt.Columns[index["h"]].ColumnName, "Required"},
-                                                   {loadlevellingdt.Columns[index["i"]].ColumnName, "PLAN_BU"},
-                                                   {loadlevellingdt.Columns[index["j"]].ColumnName, "FLAG_HR"},
-                                                   {loadlevellingdt.Columns[index["k"]].ColumnName, "Allocated"}
+                                                   {loadlevellingdt.Columns[Index["a"]].ColumnName, "F1"},
+                                                   {loadlevellingdt.Columns[Index["b"]].ColumnName, "F2"},
+                                                   {loadlevellingdt.Columns[Index["c"]].ColumnName, "F3"},
+                                                   {loadlevellingdt.Columns[Index["d"]].ColumnName, "Ahead"},
+                                                   {loadlevellingdt.Columns[Index["e"]].ColumnName, "Late"},
+                                                   {loadlevellingdt.Columns[Index["f"]].ColumnName, "Priority"},
+                                                   {loadlevellingdt.Columns[Index["g"]].ColumnName, "Capacity"},
+                                                   {loadlevellingdt.Columns[Index["h"]].ColumnName, "Required"},
+                                                   {loadlevellingdt.Columns[Index["i"]].ColumnName, "PLAN_BU"},
+                                                   {loadlevellingdt.Columns[Index["j"]].ColumnName, "FLAG_HR"},
+                                                   {loadlevellingdt.Columns[Index["k"]].ColumnName, "Allocated"}
                                                };
 
                 // assegna gli heading, come definiti sopra
-                loadlevellingdt.Columns[index["a"]].ColumnName = remap[loadlevellingdt.Columns[index["a"]].ColumnName];
-                loadlevellingdt.Columns[index["b"]].ColumnName = remap[loadlevellingdt.Columns[index["b"]].ColumnName];
-                loadlevellingdt.Columns[index["c"]].ColumnName = remap[loadlevellingdt.Columns[index["c"]].ColumnName];
-                loadlevellingdt.Columns[index["d"]].ColumnName = remap[loadlevellingdt.Columns[index["d"]].ColumnName];
-                loadlevellingdt.Columns[index["e"]].ColumnName = remap[loadlevellingdt.Columns[index["e"]].ColumnName];
-                loadlevellingdt.Columns[index["f"]].ColumnName = remap[loadlevellingdt.Columns[index["f"]].ColumnName];
-                loadlevellingdt.Columns[index["g"]].ColumnName = remap[loadlevellingdt.Columns[index["g"]].ColumnName];
-                loadlevellingdt.Columns[index["h"]].ColumnName = remap[loadlevellingdt.Columns[index["h"]].ColumnName];
-                loadlevellingdt.Columns[index["i"]].ColumnName = remap[loadlevellingdt.Columns[index["i"]].ColumnName];
-                loadlevellingdt.Columns[index["j"]].ColumnName = remap[loadlevellingdt.Columns[index["j"]].ColumnName];
-                loadlevellingdt.Columns[index["k"]].ColumnName = remap[loadlevellingdt.Columns[index["k"]].ColumnName];
+                loadlevellingdt.Columns[Index["a"]].ColumnName = remap[loadlevellingdt.Columns[Index["a"]].ColumnName];
+                loadlevellingdt.Columns[Index["b"]].ColumnName = remap[loadlevellingdt.Columns[Index["b"]].ColumnName];
+                loadlevellingdt.Columns[Index["c"]].ColumnName = remap[loadlevellingdt.Columns[Index["c"]].ColumnName];
+                loadlevellingdt.Columns[Index["d"]].ColumnName = remap[loadlevellingdt.Columns[Index["d"]].ColumnName];
+                loadlevellingdt.Columns[Index["e"]].ColumnName = remap[loadlevellingdt.Columns[Index["e"]].ColumnName];
+                loadlevellingdt.Columns[Index["f"]].ColumnName = remap[loadlevellingdt.Columns[Index["f"]].ColumnName];
+                loadlevellingdt.Columns[Index["g"]].ColumnName = remap[loadlevellingdt.Columns[Index["g"]].ColumnName];
+                loadlevellingdt.Columns[Index["h"]].ColumnName = remap[loadlevellingdt.Columns[Index["h"]].ColumnName];
+                loadlevellingdt.Columns[Index["i"]].ColumnName = remap[loadlevellingdt.Columns[Index["i"]].ColumnName];
+                loadlevellingdt.Columns[Index["j"]].ColumnName = remap[loadlevellingdt.Columns[Index["j"]].ColumnName];
+                loadlevellingdt.Columns[Index["k"]].ColumnName = remap[loadlevellingdt.Columns[Index["k"]].ColumnName];
 
                 // converte la tabella in IList. Questa e' la copia di lavoro interna 
                 // della tabella
-                _loadLevelling = ConvertDataTable<LlWorkRecord>(loadlevellingdt);
+                _loadLevelling = ConvertDataTable<LoadLevellingWork>(loadlevellingdt);
 
                 // assegna alla tabella originale gli heading definitivi,
                 // quelli ricavati dalla tabella Schema
-                loadlevellingdt.Columns[index["a"]].ColumnName = f1;
-                loadlevellingdt.Columns[index["b"]].ColumnName = f2;
-                loadlevellingdt.Columns[index["c"]].ColumnName = f3;
-                loadlevellingdt.Columns[index["d"]].ColumnName = ahead;
-                loadlevellingdt.Columns[index["e"]].ColumnName = late;
-                loadlevellingdt.Columns[index["f"]].ColumnName = priority;
-                loadlevellingdt.Columns[index["g"]].ColumnName = capacity;
-                loadlevellingdt.Columns[index["h"]].ColumnName = required;
-                loadlevellingdt.Columns[index["i"]].ColumnName = planBu;
-                loadlevellingdt.Columns[index["j"]].ColumnName = flagHr;
-                loadlevellingdt.Columns[index["k"]].ColumnName = allocated;
+                loadlevellingdt.Columns[Index["a"]].ColumnName = f1;
+                loadlevellingdt.Columns[Index["b"]].ColumnName = f2;
+                loadlevellingdt.Columns[Index["c"]].ColumnName = f3;
+                loadlevellingdt.Columns[Index["d"]].ColumnName = ahead;
+                loadlevellingdt.Columns[Index["e"]].ColumnName = late;
+                loadlevellingdt.Columns[Index["f"]].ColumnName = priority;
+                loadlevellingdt.Columns[Index["g"]].ColumnName = capacity;
+                loadlevellingdt.Columns[Index["h"]].ColumnName = required;
+                loadlevellingdt.Columns[Index["i"]].ColumnName = planBu;
+                loadlevellingdt.Columns[Index["j"]].ColumnName = flagHr;
+                loadlevellingdt.Columns[Index["k"]].ColumnName = allocated;
             }
             catch (TraceException e)
             {
@@ -246,9 +246,9 @@ namespace LoadL.CalcExtendedLogics
                                     // estrae dalla lista sortata soltanto i record relativi alla 
                                     // week che deve essere elaborata. Questa lista e' gia' ordinata per 
                                     // priorita' decrescente (crescente in senso numerico).
-                                    IList<LlWorkRecord> toelaborate = sortedtable.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
+                                    IList<LoadLevellingWork> toelaborate = sortedtable.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
                                     Console.WriteLine($"record della WEEK {wte} totali da elaborare: {toelaborate.Count}");
-                                    IList<LlWorkRecord> toelaborate1 = sortedtable.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
+                                    IList<LoadLevellingWork> toelaborate1 = sortedtable.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
                                     Console.WriteLine($"record della WEEK {wte} con \"Required\" diverso da 0: {toelaborate1.Count}");
                                     // elabora la week contenuta nella lista ordinata.
                                     ElabPresentWeek(toelaborate);
@@ -280,7 +280,7 @@ namespace LoadL.CalcExtendedLogics
             }
         }
 
-        private void ElabPresentWeek(IList<LlWorkRecord> toelaborate)
+        private void ElabPresentWeek(IList<LoadLevellingWork> toelaborate)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
@@ -303,7 +303,7 @@ namespace LoadL.CalcExtendedLogics
                     {
                         // prima elabora le richieste in attesa, poi elabora
                         // la settimana che e' stata passata in argomento
-                        IList<LlWorkRecord> waiting = GetWaitingRequests();
+                        IList<LoadLevellingWork> waiting = GetWaitingRequests();
                         if (waiting.Count > 0)
                         {
                             foreach (var rec in waiting)
@@ -333,9 +333,9 @@ namespace LoadL.CalcExtendedLogics
             }
         }
 
-        private IList<LlWorkRecord> GetWaitingRequests()
+        private IList<LoadLevellingWork> GetWaitingRequests()
         {
-            return new List<LlWorkRecord>();
+            return new List<LoadLevellingWork>();
             //throw new NotImplementedException();
         }
 

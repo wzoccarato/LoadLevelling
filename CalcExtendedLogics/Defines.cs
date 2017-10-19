@@ -37,7 +37,7 @@ namespace LoadL.CalcExtendedLogics
             {LlAlias.Allocated,"k"}
         };
 
-        public static Dictionary<string, int> index = new Dictionary<string, int>()
+        public static Dictionary<string, int> Index = new Dictionary<string, int>()
         {
             {"a", 7},
             {"b", 8},

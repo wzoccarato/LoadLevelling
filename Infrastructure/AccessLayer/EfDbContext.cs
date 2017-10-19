@@ -1,10 +1,14 @@
-﻿using System.Data.Entity;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Entity;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using LoadL.DataLayer.DbTables;
 
-
-namespace LoadL.TestLL.AccessLayer
+namespace LoadL.Infrastructure.AccessLayer
 {
-    class EFDbContext:DbContext
+    class EFDbContext : DbContext
     {
         // quelle che segue disabilita la pluralizzazione di entities e tabelle che viene 
         // effettuata per default da EntityFramework

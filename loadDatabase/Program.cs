@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Data.Entity;
-using System.Dynamic;
 using System.IO;
-using System.Runtime.Remoting.Messaging;
+using System.Linq;
+using AutoMapper;
 using LoadL.Infrastructure.Abstract;
-using LoadL.loadDatabase.AccessLayer;
+using LoadL.Infrastructure.AccessLayer;
+using LoadL.DataLayer;
+using LoadL.DataLayer.DbTables;
+using LoadL.DataLayer;
 
 namespace LoadL.loadDatabase
 {
@@ -58,7 +57,8 @@ namespace LoadL.loadDatabase
                 Console.Write($"Usage: loadDatabase(<path to Insert statements file>)\nExit");
                 Environment.Exit(1);
             }
-            RunScript(args[0]);
+            //RunScript(args[0]);
+            VerifyDataCongruence();
         }
 
         private static void RunScript(string filepath)
@@ -96,6 +96,21 @@ namespace LoadL.loadDatabase
                     db.ExecuteSqlCommand(sqlcmd);
                     Console.Write($"{externalcount} - {DateTime.Now}\n");
                 }
+            }
+        }
+
+        private static void VerifyDataCongruence()
+        {
+            
+            
+            ILoadL data = new EFLoadL();
+
+            var ccc = data.LoadLevellingWorkTable;
+
+            IEnumerable<string> pbu = data.PlanBu();
+            foreach (var el in pbu)
+            {
+                Console.WriteLine($"Plan_bu = {el}");
             }
         }
     }

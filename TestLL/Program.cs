@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Data;
-using System.Data.Entity;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reflection;
 using LoadL.CalcExtendedLogics;
-using LoadL.DataLayer.DbTables;
 using LoadL.Infrastructure.Abstract;
-using LoadL.TestLL.AccessLayer;
+using LoadL.Infrastructure.AccessLayer;
 
 namespace LoadL.TestLL
 {
@@ -16,15 +13,15 @@ namespace LoadL.TestLL
     {
         public static ILoadL Iloadlevelling { get; set; }
 
-        static void Main(string[] args)
+        static void Main()
         {
             Iloadlevelling = new EFLoadL();
             
             CalcExLogicClass celc = new CalcExLogicClass();
 
-            DataTable dt = LINQToDataTable(Iloadlevelling.LoadLevellingTable);
+            DataTable dt = LinqToDataTable(Iloadlevelling.LoadLevellingTable);
             dt.TableName = "LoadLevelling";     // il nome della tabella nel db
-            DataTable schema = LINQToDataTable(Iloadlevelling.SchemaTable);
+            DataTable schema = LinqToDataTable(Iloadlevelling.SchemaTable);
             schema.TableName = "Schema";
 
             DataSet ds = new DataSet();
@@ -41,7 +38,7 @@ namespace LoadL.TestLL
         /// <typeparam name="T"></typeparam>
         /// <param name="varlist"></param>
         /// <returns></returns>
-        private static DataTable LINQToDataTable<T>(IQueryable<T> varlist)
+        private static DataTable LinqToDataTable<T>(IQueryable<T> varlist)
         {
             DataTable dtReturn = new DataTable();
 
@@ -55,7 +52,7 @@ namespace LoadL.TestLL
                 // utilizza reflection per ottenere i nomi delle proprieta', e per creare la tabella (solo al primo giro)
                 if (oProps == null)
                 {
-                    oProps = ((Type)rec.GetType()).GetProperties();
+                    oProps = rec.GetType().GetProperties();
                     foreach (PropertyInfo pi in oProps)
                     {
                         Type colType = pi.PropertyType;
