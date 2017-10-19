@@ -47,7 +47,6 @@
     <Compile Include="DbTables\LoadLevelling.cs" />
     <Compile Include="DbTables\LoadLevellingWork.cs" />
     <Compile Include="DbTables\Schema.cs" />
-    <Compile Include="MapperClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

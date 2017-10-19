@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -18,14 +19,14 @@ namespace LoadL.Infrastructure.AccessLayer
 
         private readonly EFDbContext _context = new EFDbContext();
 
-        private MapperConfiguration _config;
-        private static Mapper _mapper;
-
+        private IList<LoadLevellingWork> _iLoadLevellingWorks;
 
         #region ctor
 
         public EFLoadL()
         {
+            _iLoadLevellingWorks = null;
+
             Mapper.Initialize(cfg => cfg.CreateMap<LoadLevelling, LoadLevellingWork>()
                 .ForMember(dest => dest.F1, opt => opt.MapFrom(src => src.a))
                 .ForMember(dest => dest.F2, opt => opt.MapFrom(src => src.b))
@@ -50,30 +51,22 @@ namespace LoadL.Infrastructure.AccessLayer
         {
             get
             {
-                var src = LoadLevellingTable.ToList();
-                var dst = new List<LoadLevellingWork>();
-
-                var llt = LoadLevellingTable;
-
-                foreach (var el in llt)
+                if (_iLoadLevellingWorks == null)
                 {
-                    var llw = Mapper.Map<LoadLevelling, LoadLevellingWork>(el);
-                    dst.Add(llw);
+                    _iLoadLevellingWorks = new List<LoadLevellingWork>();
+                    foreach (var el in LoadLevellingTable)
+                    {
+                        _iLoadLevellingWorks.Add(Mapper.Map<LoadLevelling, LoadLevellingWork>(el));
+                    }
                 }
-                return dst;
+                return _iLoadLevellingWorks;
             }
         }
 
-        // TODO questa e' da rifare
-        
+        public IEnumerable<string> GetDistinctPlanBu() => (from rec in LoadLevellingWorkTable select rec.PLAN_BU).Distinct().ToList();
 
-        public IEnumerable<string> PlanBu()
-        {
-            var llwt = LoadLevellingWorkTable;
-            var list = (from rec in LoadLevellingWorkTable select rec.PLAN_BU).Distinct().ToList();
-            return list;
-        }
-
+        public IEnumerable<string> GetDistinctFlagHr(string planbu) => (from rec in LoadLevellingWorkTable where rec.PLAN_BU == planbu select rec.FLAG_HR).Distinct().ToList();
+        public IEnumerable<string> GetDistinctProductionCategory(string planbu, string flaghr) => (from rec in LoadLevellingWorkTable where rec.PLAN_BU == planbu && rec.FLAG_HR == flaghr select rec.PRODUCTION_CATEGORY).Distinct().ToList();
         public IQueryable<Schema> SchemaTable => _context.Schema;
         public Database LLDatabase => _context.Database;
 

@@ -13,12 +13,13 @@ using LoadL.DataLayer;
 namespace LoadL.loadDatabase
 {
     // questo programma legge gli insert statements dal file di input,
-    // e genera le query di inserimento nel database.
+    // genera ed esegue le query di inserimento nel database.
     // tratta 1000 linee alla volta, perche' T-SQL non permette query
     // piu' corpose.
-    // il file contenenete gli insert statementes viene generato 
+    // il file contenente gli insert statementes viene generato 
     // esternamente, utilizzando uno script di bash, che legge un file
     // csv, e genera un file .sql contenente soltanto le linee da inserire
+    // A questo proposito vedere csv2insert.sh
     // il resto viene fatto qui dentro 
     class Program
     {
@@ -101,16 +102,20 @@ namespace LoadL.loadDatabase
 
         private static void VerifyDataCongruence()
         {
-            
-            
-            ILoadL data = new EFLoadL();
 
-            var ccc = data.LoadLevellingWorkTable;
-
-            IEnumerable<string> pbu = data.PlanBu();
-            foreach (var el in pbu)
+            var pbu = Iloadlevelling.GetDistinctPlanBu();
+            foreach (var p in pbu)
             {
-                Console.WriteLine($"Plan_bu = {el}");
+                var fhr = Iloadlevelling.GetDistinctFlagHr(p);
+                foreach (var f in fhr)
+                {
+                    var pcat = Iloadlevelling.GetDistinctProductionCategory(p, f);
+                    foreach (var pc in pcat)
+                    {
+                        
+                    }
+                }
+
             }
         }
     }

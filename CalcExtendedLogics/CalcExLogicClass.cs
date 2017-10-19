@@ -9,23 +9,24 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using LoadL.DataLayer.DbTables;
 using LoadL.Infrastructure;
-using static LoadL.CalcExtendedLogics.Global;
+using static LoadL.Infrastructure.Helper;
 
 namespace LoadL.CalcExtendedLogics
 {
     public class CalcExLogicClass
     {
         private IList<LoadLevellingWork> _loadLevelling;
-        private IList<Schema> _schema;          // lista contenente la conversione della DataTable Schema
-        private IList<string>_plan_bu;          // lista contenente tutti i PLAN_BU distinct
-        private IList<string> _flag_hr;         // lista contenente tutti i FLAG_HR distinct
-        private IList<LoadLevellingWork> _waitList;  // contiene tutti i record relativi alle week in attesa per l'elaborazione
+        private IList<Schema> _schema;                  // lista contenente la conversione della DataTable Schema
+        private IList<string>_plan_bu;                  // lista contenente tutti i PLAN_BU distinct
+        private IList<string> _flag_hr;                 // lista contenente tutti i FLAG_HR distinct
+        private IList<LoadLevellingWork> _waitList;     // contiene tutti i record relativi alle week in attesa per l'elaborazione
         //private IList
 
         #region ctor
 
         public CalcExLogicClass()
         {
+            // qui le inizializzazioni
             _loadLevelling = new List<LoadLevellingWork>();
             _schema = new List<Schema>();
             //_plan_bu = new List<LoadLevellingWork>();
@@ -33,7 +34,21 @@ namespace LoadL.CalcExtendedLogics
             _plan_bu = new List<string>();
             _flag_hr = new List<string>();
             _waitList = new List<LoadLevellingWork>();
-            // TODO inizializzazioni qui
+
+            // per il momento non installo AutoMapper in questo progetto
+            //Mapper.Initialize(cfg => cfg.CreateMap<LoadLevelling, LoadLevellingWork>()
+            //                            .ForMember(dest => dest.F1, opt => opt.MapFrom(src => src.a))
+            //                            .ForMember(dest => dest.F2, opt => opt.MapFrom(src => src.b))
+            //                            .ForMember(dest => dest.F3, opt => opt.MapFrom(src => src.c))
+            //                            .ForMember(dest => dest.Ahead, opt => opt.MapFrom(src => src.d))
+            //                            .ForMember(dest => dest.Late, opt => opt.MapFrom(src => src.e))
+            //                            .ForMember(dest => dest.Priority, opt => opt.MapFrom(src => src.f))
+            //                            .ForMember(dest => dest.Capacity, opt => opt.MapFrom(src => src.g))
+            //                            .ForMember(dest => dest.Required, opt => opt.MapFrom(src => src.h))
+            //                            .ForMember(dest => dest.PLAN_BU, opt => opt.MapFrom(src => src.i))
+            //                            .ForMember(dest => dest.FLAG_HR, opt => opt.MapFrom(src => src.j))
+            //                            .ForMember(dest => dest.Allocated, opt => opt.MapFrom(src => src.k)));
+
         }
         #endregion
 
@@ -109,22 +124,25 @@ namespace LoadL.CalcExtendedLogics
                 var flagHr = _schema.Where(x => x.BlockId == Alias[LlAlias.FlagHr]).Select(r => r.Heading).First();
                 var allocated = _schema.Where(x => x.BlockId == Alias[LlAlias.Allocated]).Select(r => r.Heading).First();
 
-                // questo trascodifica dagli heding della tabella passata in argomento, agli 
-                // heading utilizzati internamente, per semplicita' di gestione
+                Console.WriteLine(DateTime.Now.ToString("dd.MM.yyyy-HH:mm:ss.fff"));
+
+                // questo trascodifica dagli heading della tabella passata in argomento, agli 
+                // heading utilizzati internamente, per semplicita' di gestione e anche 
+                // leggibilit' del codice
                 Dictionary<string, string> remap = new Dictionary<string, string>()
-                                               {
-                                                   {loadlevellingdt.Columns[Index["a"]].ColumnName, "F1"},
-                                                   {loadlevellingdt.Columns[Index["b"]].ColumnName, "F2"},
-                                                   {loadlevellingdt.Columns[Index["c"]].ColumnName, "F3"},
-                                                   {loadlevellingdt.Columns[Index["d"]].ColumnName, "Ahead"},
-                                                   {loadlevellingdt.Columns[Index["e"]].ColumnName, "Late"},
-                                                   {loadlevellingdt.Columns[Index["f"]].ColumnName, "Priority"},
-                                                   {loadlevellingdt.Columns[Index["g"]].ColumnName, "Capacity"},
-                                                   {loadlevellingdt.Columns[Index["h"]].ColumnName, "Required"},
-                                                   {loadlevellingdt.Columns[Index["i"]].ColumnName, "PLAN_BU"},
-                                                   {loadlevellingdt.Columns[Index["j"]].ColumnName, "FLAG_HR"},
-                                                   {loadlevellingdt.Columns[Index["k"]].ColumnName, "Allocated"}
-                                               };
+                                                   {
+                                                       {loadlevellingdt.Columns[Index["a"]].ColumnName, "F1"},
+                                                       {loadlevellingdt.Columns[Index["b"]].ColumnName, "F2"},
+                                                       {loadlevellingdt.Columns[Index["c"]].ColumnName, "F3"},
+                                                       {loadlevellingdt.Columns[Index["d"]].ColumnName, "Ahead"},
+                                                       {loadlevellingdt.Columns[Index["e"]].ColumnName, "Late"},
+                                                       {loadlevellingdt.Columns[Index["f"]].ColumnName, "Priority"},
+                                                       {loadlevellingdt.Columns[Index["g"]].ColumnName, "Capacity"},
+                                                       {loadlevellingdt.Columns[Index["h"]].ColumnName, "Required"},
+                                                       {loadlevellingdt.Columns[Index["i"]].ColumnName, "PLAN_BU"},
+                                                       {loadlevellingdt.Columns[Index["j"]].ColumnName, "FLAG_HR"},
+                                                       {loadlevellingdt.Columns[Index["k"]].ColumnName, "Allocated"}
+                                                   };
 
                 // assegna gli heading, come definiti sopra
                 loadlevellingdt.Columns[Index["a"]].ColumnName = remap[loadlevellingdt.Columns[Index["a"]].ColumnName];
@@ -142,6 +160,11 @@ namespace LoadL.CalcExtendedLogics
                 // converte la tabella in IList. Questa e' la copia di lavoro interna 
                 // della tabella
                 _loadLevelling = ConvertDataTable<LoadLevellingWork>(loadlevellingdt);
+                //_loadLevelling = MapDataTable(loadlevellingdt);
+
+                Console.WriteLine(DateTime.Now.ToString("dd.MM.yyyy-HH:mm:ss.fff"));
+
+                Console.ReadKey();
 
                 // assegna alla tabella originale gli heading definitivi,
                 // quelli ricavati dalla tabella Schema
@@ -339,9 +362,33 @@ namespace LoadL.CalcExtendedLogics
             //throw new NotImplementedException();
         }
 
+
+
+      
+        /// <summary>
+        /// Questa utilizza AutoMapper per rimappare la DataTable
+        /// su una lista di oggetti LoadLevellingWork
+        /// e' leggermente meno performante della funazione
+        /// ConvertDataTable. Per cui nel programma utilizzo la seconda
+        /// </summary>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        //private IList<LoadLevellingWork> MapDataTable(DataTable dt)
+        //{
+        //    IList<LoadLevellingWork> data = new Collection<LoadLevellingWork>();
+
+        //    foreach (DataRow row in dt.Rows)
+        //    {
+        //        LoadLevelling item = GetItem<LoadLevelling>(row);
+        //        data.Add(Mapper.Map<LoadLevelling, LoadLevellingWork>(item));
+        //    }
+        //    return data;
+        //}
+
+
         /// <summary>
         /// Converte l'oggetto DataTable passato in argomento 
-        /// in una collection di cui ritorna l'interfacia IList.
+        /// in una collection di cui ritorna l'interfaccia IList.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="dt"></param>
