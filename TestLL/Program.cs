@@ -15,7 +15,7 @@ namespace LoadL.TestLL
 
         static void Main()
         {
-            Iloadlevelling = new EFLoadL();
+            Iloadlevelling = new EfLoadL();
             
             CalcExLogicClass celc = new CalcExLogicClass();
 

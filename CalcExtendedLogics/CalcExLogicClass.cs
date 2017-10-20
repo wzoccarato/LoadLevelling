@@ -11,6 +11,7 @@ using LoadL.DataLayer.DbTables;
 using LoadL.Infrastructure;
 using static LoadL.Infrastructure.Helper;
 
+
 namespace LoadL.CalcExtendedLogics
 {
     public class CalcExLogicClass

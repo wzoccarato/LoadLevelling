@@ -8,7 +8,6 @@ using LoadL.Infrastructure.Abstract;
 using LoadL.Infrastructure.AccessLayer;
 using LoadL.DataLayer;
 using LoadL.DataLayer.DbTables;
-using LoadL.DataLayer;
 
 namespace LoadL.loadDatabase
 {
@@ -51,7 +50,7 @@ namespace LoadL.loadDatabase
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Iloadlevelling = new EFLoadL();
+            Iloadlevelling = new EfLoadL();
 
             if (args.Length != 1)
             {
@@ -112,7 +111,13 @@ namespace LoadL.loadDatabase
                     var pcat = Iloadlevelling.GetDistinctProductionCategory(p, f);
                     foreach (var pc in pcat)
                     {
-                        
+                        var lbpc = Iloadlevelling.ListByProductionCategory(p, f, pc);
+
+                        foreach (var rc in lbpc)
+                        {
+                            Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}, week = {rc.WEEK_PLAN}, priority = {rc.Priority}");
+                        }
+                        Console.ReadKey();
                     }
                 }
 
