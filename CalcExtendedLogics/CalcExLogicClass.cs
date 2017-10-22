@@ -267,9 +267,10 @@ namespace LoadL.CalcExtendedLogics
                                 {
                                     var wte = sortedlist.ElementAt(0).WEEK_PLAN;
 
+                                    // foreach(WEEK_PLAN).....
                                     // estrae dalla lista sortata soltanto i record relativi alla 
                                     // week che deve essere elaborata. Questa lista e' gia' ordinata per 
-                                    // priorita' decrescente (crescente in senso numerico).
+                                    // priorita' decrescente (la priorita' piu' alta ha ilnumero piu' basso).
                                     IList<LoadLevellingWork> toelaborate = sortedlist.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
 
                                     var count = toelaborate.Count(s => s.Capacity > 0);
