@@ -9,32 +9,41 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using LoadL.DataLayer.DbTables;
 using LoadL.Infrastructure;
-using static LoadL.Infrastructure.Helper;
+using LoadL.Infrastructure.Abstract;
+using static LoadL.CalcExtendedLogics.Helper;
 
 
 namespace LoadL.CalcExtendedLogics
 {
     public class CalcExLogicClass
     {
-        private IList<LoadLevellingWork> _loadLevelling;
+        //private IList<LoadLevellingWork> _loadLevelling;
         private IList<Schema> _schema;                  // lista contenente la conversione della DataTable Schema
-        private IList<string>_plan_bu;                  // lista contenente tutti i PLAN_BU distinct
-        private IList<string> _flag_hr;                 // lista contenente tutti i FLAG_HR distinct
+        private IEnumerable<string>_plan_bu;                  // lista contenente tutti i PLAN_BU distinct
+        private IEnumerable<string> _flag_hr;                 // lista contenente tutti i FLAG_HR distinct
         private IList<LoadLevellingWork> _waitList;     // contiene tutti i record relativi alle week in attesa per l'elaborazione
-        //private IList
+
+        private readonly ILoadLevelling _iloadl;
+
+        private int _totcount;
 
         #region ctor
 
         public CalcExLogicClass()
         {
             // qui le inizializzazioni
-            _loadLevelling = new List<LoadLevellingWork>();
+
+            _totcount = 0;
+
+            //_loadLevelling = new List<LoadLevellingWork>();
             _schema = new List<Schema>();
             //_plan_bu = new List<LoadLevellingWork>();
 
             _plan_bu = new List<string>();
             _flag_hr = new List<string>();
             _waitList = new List<LoadLevellingWork>();
+
+            _iloadl = new LoadL(new List<LoadLevellingWork>());
 
             // per il momento non installo AutoMapper in questo progetto
             //Mapper.Initialize(cfg => cfg.CreateMap<LoadLevelling, LoadLevellingWork>()
@@ -158,9 +167,9 @@ namespace LoadL.CalcExtendedLogics
                 loadlevellingdt.Columns[Index["j"]].ColumnName = remap[loadlevellingdt.Columns[Index["j"]].ColumnName];
                 loadlevellingdt.Columns[Index["k"]].ColumnName = remap[loadlevellingdt.Columns[Index["k"]].ColumnName];
 
-                // converte la tabella in IList. Questa e' la copia di lavoro interna 
+                // converte la tabella in List. Questa e' la copia di lavoro interna 
                 // della tabella
-                _loadLevelling = ConvertDataTable<LoadLevellingWork>(loadlevellingdt);
+                _iloadl.LoadLevellingWorkTable = ConvertDataTable<LoadLevellingWork>(loadlevellingdt).ToList();
                 //_loadLevelling = MapDataTable(loadlevellingdt);
 
                 Console.WriteLine(DateTime.Now.ToString("dd.MM.yyyy-HH:mm:ss.fff"));
@@ -220,17 +229,18 @@ namespace LoadL.CalcExtendedLogics
                 //                 };
 
                 // PLAN_BU
-                //var pbu =_loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => new {planbu = l.Key, count = l.Count()});
-                _plan_bu = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => l.Key).ToList();
+                //_plan_bu = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => l.Key).ToList();
+                _plan_bu = _iloadl.GetDistinctPlanBu();
 
-                foreach (var rec in _plan_bu)
+                foreach (var pbu in _plan_bu)
                 {
                     //Console.WriteLine($"planbu = {rec.planbu}, count = {rec.count}");
-                    Console.WriteLine($"planbu = {rec}");
+                    Console.WriteLine($"planbu = {pbu}");
 
                     // FLAG_HR
-                    //var flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => new {flag_hr = l.Key, count = l.Count()});
-                    _flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).ToList();
+                    //_flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).ToList();
+                    _flag_hr = _iloadl.GetDistinctFlagHr(pbu);
+
 
                     foreach (var fhr in _flag_hr)
                     {
@@ -238,46 +248,46 @@ namespace LoadL.CalcExtendedLogics
                         Console.WriteLine($"flaghr = {fhr}");
 
                         // PRODUCTION_CATEGORY
-                        var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
+                        //var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
+                        var prodCategory = _iloadl.GetDistinctProductionCategory(pbu, fhr);
 
                         foreach (var pc in prodCategory)
                         {
                             Console.WriteLine($"Production_category = {pc}");
 
-                            //Console.WriteLine("Premere un tasto...");
-                            //Console.ReadKey();
-
-                            var ll = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr && r.PRODUCTION_CATEGORY == pc).Select(rr => rr).ToList();
-
-                            //foreach (var rc in ll)
-                            //{
-                            //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}");
-                            //}
-
                             // ordina per WEEK_PLAN e poi per Priority
-                            var sortedtable = ll.OrderBy(g => g.WEEK_PLAN).ThenBy(h => h.Priority).ToList();
+                            //var sortedtable = ll.OrderBy(g => g.WEEK_PLAN).ThenBy(h => h.Priority).ToList();
+                            var sortedlist = _iloadl.ListByWeekAndPriority(pbu, fhr, pc);
 
-                            if (sortedtable.Count > 0)
+                            Console.WriteLine($"Sorterdlist.count per {pc} = {sortedlist.Count}");
+
+                            if (sortedlist.Count > 0)
                             {
                                 do
                                 {
-                                    var wte = sortedtable.ElementAt(0).WEEK_PLAN;
-
-                                    //Console.WriteLine($"wte = {wte}");
-                                    //Console.WriteLine("Premere un tasto...");
-                                    //Console.ReadKey();
+                                    var wte = sortedlist.ElementAt(0).WEEK_PLAN;
 
                                     // estrae dalla lista sortata soltanto i record relativi alla 
                                     // week che deve essere elaborata. Questa lista e' gia' ordinata per 
                                     // priorita' decrescente (crescente in senso numerico).
-                                    IList<LoadLevellingWork> toelaborate = sortedtable.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
+                                    IList<LoadLevellingWork> toelaborate = sortedlist.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
+
+                                    var count = toelaborate.Count(s => s.Capacity > 0);
+
+                                    //Console.WriteLine($"Count Capacity != 0: {count}");
+                                    _totcount += count;
+                                    //Console.WriteLine($"TotCount = {_totcount}");
+                                    //Console.WriteLine($"wte = {wte}");
+                                    //Console.WriteLine("Premere un tasto...");
+                                    //Console.ReadKey();
+
                                     Console.WriteLine($"record della WEEK {wte} totali da elaborare: {toelaborate.Count}");
-                                    IList<LoadLevellingWork> toelaborate1 = sortedtable.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
+                                    IList<LoadLevellingWork> toelaborate1 = sortedlist.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
                                     Console.WriteLine($"record della WEEK {wte} con \"Required\" diverso da 0: {toelaborate1.Count}");
                                     // elabora la week contenuta nella lista ordinata.
                                     ElabPresentWeek(toelaborate);
                                     // rimuove da sortedtable i records appena elaborati
-                                    sortedtable.RemoveAll(r => r.WEEK_PLAN == wte);
+                                    sortedlist.RemoveAll(r => r.WEEK_PLAN == wte);
 
                                     //Console.WriteLine($"prossimo = {toelaborate.ElementAt(0).WEEK_PLAN}");
                                     //Console.WriteLine("Premere un tasto...");
@@ -286,7 +296,7 @@ namespace LoadL.CalcExtendedLogics
                                     //{
                                     //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcategory = {rc.PRODUCTION_CATEGORY}, WEEK_PLAN = {rc.WEEK_PLAN}, Priority = {rc.Priority}");
                                     //}
-                                } while (sortedtable.Count > 0);
+                                } while (sortedlist.Count > 0);
                             }
                         }
                     }
@@ -318,7 +328,8 @@ namespace LoadL.CalcExtendedLogics
                         Console.WriteLine($"Capacy non è la stessa per tutta la WEEK_PLAN. Week = {toelaborate[0].WEEK_PLAN}, Count = {ll.Count}" );
                         for(int i=0;i<ll.Count;i++)
                         {
-                            Console.WriteLine($"Capacity_{i} = {ll[i]}");
+                            if(ll[i] > 0)
+                                Console.WriteLine($"Capacity_{i} = {ll[i]}");
                         }
                         //throw new TraceException(fname,
                         //    $"Capacy non è la stessa per tutta la WEEK_PLAN. Week = {toelaborate[0].WEEK_PLAN}");

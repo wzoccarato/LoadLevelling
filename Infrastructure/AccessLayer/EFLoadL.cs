@@ -13,13 +13,13 @@ using LoadL.Infrastructure.Abstract;
 
 namespace LoadL.Infrastructure.AccessLayer
 {
-    public class EfLoadL : ILoadL, IDisposable
+    public class EfLoadL : IDbQuery, IDisposable
     {
         private bool _isDisposed = false;
 
         private readonly EFDbContext _context = new EFDbContext();
 
-        private IList<LoadLevellingWork> _iLoadLevellingWorks;
+        private List<LoadLevellingWork> _iLoadLevellingWorks;
 
         #region ctor
 
@@ -47,7 +47,7 @@ namespace LoadL.Infrastructure.AccessLayer
 
         public IQueryable<LoadLevelling> LoadLevellingTable => _context.LoadLevellings;
 
-        public IList<LoadLevellingWork> LoadLevellingWorkTable
+        public List<LoadLevellingWork> LoadLevellingWorkTable
         {
             get
             {
@@ -61,6 +61,7 @@ namespace LoadL.Infrastructure.AccessLayer
                 }
                 return _iLoadLevellingWorks;
             }
+            set { }
         }
 
         public IEnumerable<string> GetDistinctPlanBu() => 
@@ -75,13 +76,17 @@ namespace LoadL.Infrastructure.AccessLayer
              where rec.PLAN_BU == planbu && rec.FLAG_HR == flaghr
              select rec.PRODUCTION_CATEGORY).Distinct().ToList();
 
-        public IList<LoadLevellingWork> ListByProductionCategory(string planbu, string flaghr, string prodcat) =>
+        public List<LoadLevellingWork> ListByWeekAndPriority(string planbu, string flaghr, string prodcat) =>
             (from rec in LoadLevellingWorkTable
              where rec.PLAN_BU == planbu && rec.FLAG_HR == flaghr && rec.PRODUCTION_CATEGORY == prodcat orderby rec.WEEK_PLAN, rec.Priority
              select rec ).ToList();
 
         public IQueryable<Schema> SchemaTable => _context.Schema;
-        public Database LLDatabase => _context.Database;
+        public Database LlDatabase => _context.Database;
+        public void Save()
+        {
+            _context.SaveChanges();
+        }
 
         #endregion
 

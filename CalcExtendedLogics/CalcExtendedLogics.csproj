@@ -41,6 +41,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalcExLogicClass.cs" />
+    <Compile Include="Helper.cs" />
+    <Compile Include="LoadL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -50,10 +50,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Abstract\ILoadL.cs" />
+    <Compile Include="Abstract\IDbQuery.cs" />
+    <Compile Include="Abstract\ILoadLevelling.cs" />
     <Compile Include="AccessLayer\EfDbContext.cs" />
     <Compile Include="AccessLayer\EFLoadL.cs" />
-    <Compile Include="Helper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TraceException.cs" />
   </ItemGroup>

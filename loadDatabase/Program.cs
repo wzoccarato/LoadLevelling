@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
@@ -22,7 +23,7 @@ namespace LoadL.loadDatabase
     // il resto viene fatto qui dentro 
     class Program
     {
-        public static ILoadL Iloadlevelling { get; set; }
+        public static IDbQuery Dbq { get; set; }
 
         private static string _pre = @"USE [SDG_Consulting]
     INSERT INTO [dbo].[LoadLevelling]
@@ -50,20 +51,22 @@ namespace LoadL.loadDatabase
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            Iloadlevelling = new EfLoadL();
+            Dbq = new EfLoadL();
 
             if (args.Length != 1)
             {
                 Console.Write($"Usage: loadDatabase(<path to Insert statements file>)\nExit");
                 Environment.Exit(1);
             }
-            //RunScript(args[0]);
+            Console.WriteLine($"Inizio insert in database {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            RunScript(args[0]);
+            Console.WriteLine($"Fine insert in database {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
             VerifyDataCongruence();
         }
 
         private static void RunScript(string filepath)
         {
-            Database db = Iloadlevelling.LLDatabase;
+            Database db = Dbq.LlDatabase;
 
             // tratta 1000 linee alla volta, perche' T-SQL non permette di piu'
 
@@ -101,27 +104,77 @@ namespace LoadL.loadDatabase
 
         private static void VerifyDataCongruence()
         {
-
-            var pbu = Iloadlevelling.GetDistinctPlanBu();
+            Console.WriteLine($"VeridyDataCongruence INPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            var pbu = Dbq.GetDistinctPlanBu();
             foreach (var p in pbu)
             {
-                var fhr = Iloadlevelling.GetDistinctFlagHr(p);
+                var fhr = Dbq.GetDistinctFlagHr(p);
                 foreach (var f in fhr)
                 {
-                    var pcat = Iloadlevelling.GetDistinctProductionCategory(p, f);
+                    var pcat = Dbq.GetDistinctProductionCategory(p, f);
                     foreach (var pc in pcat)
                     {
-                        var lbpc = Iloadlevelling.ListByProductionCategory(p, f, pc);
-
-                        foreach (var rc in lbpc)
+                        var lbwp = Dbq.ListByWeekAndPriority(p, f, pc);
+                        if (lbwp.Count > 0)
                         {
-                            Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}, week = {rc.WEEK_PLAN}, priority = {rc.Priority}");
+                            var rnd = new Random();
+
+                            do
+                            {
+                                var wte = lbwp.ElementAt(0).WEEK_PLAN;
+
+                                // estrae dalla lista sortata soltanto i record relativi alla 
+                                // week che deve essere elaborata. Questa lista e' gia' ordinata per 
+                                // priorita' decrescente (crescente in senso numerico).
+                                var toelaborate = lbwp.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
+                           
+                                var ll = toelaborate.Select(r => r.Capacity).Distinct().OrderByDescending(s => s).ToList();
+                                if (ll.Count > 1)
+                                {
+                                    // se ce n'e' piu' di uno, allora sicuramente devo correggere
+                                    // e il primo e' sicuramente diverso da 0
+                                    // i = plan_bu, j = flag_hr, g = Capacity
+                                    Console.WriteLine($"Capacity_0 = {ll[0]}");
+                                    (from rec in Dbq.LoadLevellingTable
+                                        where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
+                                        select rec).ToList().ForEach(r => r.g = ll[0]);
+                                }
+                                else
+                                {
+                                    // condronto cosi' perche' e' un double
+                                    if (ll[0] < 0.1)
+                                    {
+                                        // i = plan_bu, j = flag_hr, g = Capacity
+                                        var newcapacity = rnd.Next(50, 600);
+                                        Console.WriteLine($"newcapacity = {newcapacity}");
+                                        (from rec in Dbq.LoadLevellingTable
+                                            where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
+                                            select rec).ToList().ForEach(r => r.g = newcapacity);
+                                    }
+                                }
+                                // rimuove da sortedtable i records appena elaborati
+                                lbwp.RemoveAll(r => r.WEEK_PLAN == wte);
+
+                            } while (lbwp.Count > 0);
                         }
-                        Console.ReadKey();
+                        //foreach (var rc in lbpc)
+                        //{
+                        //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}, week = {rc.WEEK_PLAN}, priority = {rc.Priority}");
+                        //}
+                        //Console.ReadKey();
                     }
                 }
 
             }
+            // corregge tutti i record che hanno Required = 0
+            var newreq = new Random();
+            Console.WriteLine($"START correzione valori di required == 0 : {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            (from rec in Dbq.LoadLevellingTable where rec.h < 0.1 select rec).ToList().ForEach(r => r.h = newreq.Next(24,300));
+            Console.WriteLine($"END correzione valori di required == 0 : {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            Console.WriteLine($"START save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            Dbq.Save();
+            Console.WriteLine($"END save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            Console.WriteLine($"VeridyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
         }
     }
 }

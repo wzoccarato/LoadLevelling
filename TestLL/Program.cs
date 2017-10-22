@@ -11,17 +11,17 @@ namespace LoadL.TestLL
 
     class Program
     {
-        public static ILoadL Iloadlevelling { get; set; }
+        public static IDbQuery ILl { get; set; }
 
         static void Main()
         {
-            Iloadlevelling = new EfLoadL();
+            ILl = new EfLoadL();
             
             CalcExLogicClass celc = new CalcExLogicClass();
 
-            DataTable dt = LinqToDataTable(Iloadlevelling.LoadLevellingTable);
+            DataTable dt = LinqToDataTable(ILl.LoadLevellingTable);
             dt.TableName = "LoadLevelling";     // il nome della tabella nel db
-            DataTable schema = LinqToDataTable(Iloadlevelling.SchemaTable);
+            DataTable schema = LinqToDataTable(ILl.SchemaTable);
             schema.TableName = "Schema";
 
             DataSet ds = new DataSet();
