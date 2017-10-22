@@ -135,9 +135,13 @@ namespace LoadL.loadDatabase
                                     // e il primo e' sicuramente diverso da 0
                                     // i = plan_bu, j = flag_hr, g = Capacity
                                     Console.WriteLine($"Capacity_0 = {ll[0]}");
+                                    //(from rec in Dbq.LoadLevellingTable
+                                    //    where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
+                                    //    select rec).ToList().ForEach(r => r.g = ll[0]);
+
                                     (from rec in Dbq.LoadLevellingTable
                                         where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
-                                        select rec).ToList().ForEach(r => r.g = ll[0]);
+                                        select rec).UpdateFromQuery(rec => new LoadLevelling {g = ll[0]});
                                 }
                                 else
                                 {
@@ -147,9 +151,14 @@ namespace LoadL.loadDatabase
                                         // i = plan_bu, j = flag_hr, g = Capacity
                                         var newcapacity = rnd.Next(50, 600);
                                         Console.WriteLine($"newcapacity = {newcapacity}");
+                                        //(from rec in Dbq.LoadLevellingTable
+                                        //    where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
+                                        //    select rec).ToList().ForEach(r => r.g = newcapacity);
+
                                         (from rec in Dbq.LoadLevellingTable
                                             where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
-                                            select rec).ToList().ForEach(r => r.g = newcapacity);
+                                            select rec).UpdateFromQuery(rec => new LoadLevelling{g = newcapacity});
+
                                     }
                                 }
                                 // rimuove da sortedtable i records appena elaborati
@@ -169,11 +178,14 @@ namespace LoadL.loadDatabase
             // corregge tutti i record che hanno Required = 0
             var newreq = new Random();
             Console.WriteLine($"START correzione valori di required == 0 : {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-            (from rec in Dbq.LoadLevellingTable where rec.h < 0.1 select rec).ToList().ForEach(r => r.h = newreq.Next(24,300));
+
+            //(from rec in Dbq.LoadLevellingTable where rec.h < 0.1 select rec).ToList().ForEach(r => r.h = newreq.Next(24,300));
+            (from rec in Dbq.LoadLevellingTable where rec.h < 0.1 select rec).UpdateFromQuery(rec => new LoadLevelling {h = newreq.Next(24, 300)});
+
             Console.WriteLine($"END correzione valori di required == 0 : {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-            Console.WriteLine($"START save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-            Dbq.MassiveSaveData();
-            Console.WriteLine($"END save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            //Console.WriteLine($"START save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            //Dbq.MassiveSaveData();
+            //Console.WriteLine($"END save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
             Console.WriteLine($"VeridyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
         }
     }
