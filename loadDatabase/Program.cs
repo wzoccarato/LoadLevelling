@@ -134,7 +134,7 @@ namespace LoadL.loadDatabase
                                     // se ce n'e' piu' di uno, allora sicuramente devo correggere
                                     // e il primo e' sicuramente diverso da 0
                                     // i = plan_bu, j = flag_hr, g = Capacity
-                                    Console.WriteLine($"Capacity_0 = {ll[0]}");
+                                    //Console.WriteLine($"Capacity_0 = {ll[0]}");
                                     (from rec in Dbq.LoadLevellingTable
                                      where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
                                      select rec).ToList().ForEach(r => r.g = ll[0]);
