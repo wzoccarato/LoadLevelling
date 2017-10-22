@@ -14,9 +14,10 @@ namespace LoadL.Infrastructure.Abstract
     // tramite Entity Framework
     public interface IDbQuery:ILoadLevelling
     {
-        IQueryable<LoadLevelling> LoadLevellingTable { get; }                                               // get full LoadLevelling table from database
-        IQueryable<Schema> SchemaTable { get; }                                                             // get the full Schema table
-        Database LlDatabase { get; }                                                                        // ritorna il database rappresentato dal DbContext
-        void Save();
+        IQueryable<LoadLevelling> LoadLevellingTable { get; }       // get full LoadLevelling table from database
+        IQueryable<Schema> SchemaTable { get; }                     // get the full Schema table
+        Database LlDatabase { get; }                                // ritorna il database rappresentato dal DbContext
+        void Save();                                                // usa SaveChanges di Entity Framework                                
+        void MassiveSaveData();                                     // usa BulkSaveChanges di Z.EntityFramework.Extensions
     }
 }

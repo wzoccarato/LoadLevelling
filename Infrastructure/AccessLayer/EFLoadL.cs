@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Entity;
+using System.Data.Entity.Core.EntityClient;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -86,6 +89,33 @@ namespace LoadL.Infrastructure.AccessLayer
         public void Save()
         {
             _context.SaveChanges();
+            
+
+            //var mustOpen = _context.Database.Connection.State != ConnectionState.Open;
+
+            //try
+            //{
+            //    if (mustOpen)
+            //        _context.Database.Connection.Open();
+            //    SqlTransaction transaction = _context.Database.CurrentTransaction?.UnderlyingTransaction as SqlTransaction;
+            //    using (SqlBulkCopy bulkCopy = new SqlBulkCopy((_context.Database.Connection) as SqlConnection, SqlBulkCopyOptions.Default, transaction))
+            //    {
+            //        EntityCommand command = _context.Database.Connection.CreateCommand();
+
+            //        bulkCopy.WriteToServer()
+            //    }
+
+            //}
+            //finally
+            //{
+            //    if (mustOpen)
+            //        _context.Database.Connection.Close();
+            //}
+        }
+
+        public void MassiveSaveData()
+        {
+            _context.BulkSaveChanges();
         }
 
         #endregion

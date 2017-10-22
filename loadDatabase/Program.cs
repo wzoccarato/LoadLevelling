@@ -172,7 +172,7 @@ namespace LoadL.loadDatabase
             (from rec in Dbq.LoadLevellingTable where rec.h < 0.1 select rec).ToList().ForEach(r => r.h = newreq.Next(24,300));
             Console.WriteLine($"END correzione valori di required == 0 : {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
             Console.WriteLine($"START save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-            Dbq.Save();
+            Dbq.MassiveSaveData();
             Console.WriteLine($"END save on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
             Console.WriteLine($"VeridyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
         }
