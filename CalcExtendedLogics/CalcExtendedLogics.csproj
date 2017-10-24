@@ -41,9 +41,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CalcExLogicClass.cs" />
+    <Compile Include="Defines.cs" />
+    <Compile Include="ElementsList.cs" />
     <Compile Include="Helper.cs" />
     <Compile Include="LoadL.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ElementsFifo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataLayer\DataLayer.csproj">

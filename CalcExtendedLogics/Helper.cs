@@ -8,23 +8,7 @@ namespace LoadL.CalcExtendedLogics
 {
     public static class Helper
     {
-        // posizione in tabella loadlevelling degli heading
-        // che possono cambiare nome
-        public enum LlAlias
-        {
-            F1 = 7,
-            F2,
-            F3,
-            Ahead,
-            Late,
-            Priority,
-            Capacity,
-            Required,
-            PlanBu,
-            FlagHr,
-            Allocated
-        };
-
+    
         // esegue la mappatura da heading della colonne interni, a Heading delle
         // colonne relative alla dataTable LoadLevelling
         public static Dictionary<LlAlias, string> Alias = new Dictionary<LlAlias, string>()
