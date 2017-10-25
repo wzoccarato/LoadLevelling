@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -44,5 +46,35 @@ namespace LoadL.CalcExtendedLogics
                                                           {"j", (int)LlAlias.FlagHr},
                                                           {"k", (int)LlAlias.Allocated}
                                                       };
+
+        public static int GetWeeksInYear(int year)
+        {
+            DateTimeFormatInfo dfi = DateTimeFormatInfo.CurrentInfo;
+            DateTime date1 = new DateTime(year, 12, 31);
+            Calendar cal = dfi.Calendar;
+            return cal.GetWeekOfYear(date1, dfi.CalendarWeekRule,
+                                     dfi.FirstDayOfWeek);
+        }
+
+        public static bool ValidateWeekFormat(string week)
+        {
+            var isvalid = false;
+
+            if (week?.Length == Global.WEEKPLAN_LENGTH)
+            {
+                var year = Convert.ToInt32(week.Substring(0, Global.YEAR_LENGTH));
+                var wk = Convert.ToInt32(week.Substring(Global.YEAR_LENGTH, Global.WEEK_LENGTH));
+                if (year > Global.MINYEAR && year < Global.MAXYEAR)
+                {
+                    var wkinyear = GetWeeksInYear(year);
+                    if (wk > 0 && wk <= wkinyear)
+                    {
+                        isvalid = true;
+                    }
+                }
+            }
+            return isvalid;
+        }
+
     }
 }

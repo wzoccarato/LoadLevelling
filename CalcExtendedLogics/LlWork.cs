@@ -8,11 +8,11 @@ using LoadL.Infrastructure.Abstract;
 
 namespace LoadL.CalcExtendedLogics
 {
-    public class LoadL:ILoadLevelling
+    public class LlWork:ILoadLevelling
     {
         #region ctor
 
-        public LoadL(List<LoadLevellingWork> loadLevelling)
+        public LlWork(List<LoadLevellingWork> loadLevelling)
         {
             LoadLevellingWorkTable = loadLevelling;
         }

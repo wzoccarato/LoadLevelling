@@ -44,7 +44,7 @@ namespace LoadL.CalcExtendedLogics
             _flag_hr = new List<string>();
             _waitList = new ElementsList();
 
-            _iloadl = new LoadL(new List<LoadLevellingWork>());
+            _iloadl = new LlWork(new List<LoadLevellingWork>());
 
             // per il momento non installo AutoMapper in questo progetto
             //Mapper.Initialize(cfg => cfg.CreateMap<LoadLevelling, LoadLevellingWork>()
@@ -252,7 +252,7 @@ namespace LoadL.CalcExtendedLogics
 
                             // ordina per WEEK_PLAN e poi per Priority
                             //var sortedtable = ll.OrderBy(g => g.WEEK_PLAN).ThenBy(h => h.Priority).ToList();
-                            var sortedlist = _iloadl.ListByWeekAndPriority(pbu, fhr, pc);
+                            List<LoadLevellingWork>sortedlist = _iloadl.ListByWeekAndPriority(pbu, fhr, pc);
 
                             Console.WriteLine($"Record da elaborare per {pc} = {sortedlist.Count}");
 
@@ -373,10 +373,9 @@ namespace LoadL.CalcExtendedLogics
         /// <returns></returns>
         private IList<LoadLevellingWork> GetWaitingRequests(string currentweek, int late)
         {
-            IList<LoadLevellingWork> retval = new List<LoadLevellingWork>();
-            List<string> lateweeks = CalculateLateWeeks(currentweek,late);
+            List<string> lateweeks = GetLateWeeks(currentweek,late);
             // ricerca nella lista _waitlist 
-            throw new NotImplementedException();
+            return (from el in lateweeks select _waitList.GetByWeek(el) into wklist where wklist.Count > 0 from r in wklist select r).ToList();
         }
 
         /// <summary>
@@ -391,16 +390,52 @@ namespace LoadL.CalcExtendedLogics
             }
         }
 
-        List<string> CalculateLateWeeks(string week,int late)
+        /// <summary>
+        /// Sulla base del parametro late, e della settiman corrente,
+        /// prepara una lista delle settimane "precedenti"
+        /// che possone essere elaborate.
+        /// Calcola anche il salto di anno, se necessario
+        /// </summary>
+        /// <param name="week"></param>
+        /// <param name="late"></param>
+        /// <returns></returns>
+        List<string> GetLateWeeks(string week,int late)
         {
+
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
-            if (week.Length!= Global.WEEKPLAN_LENGTH)
-                throw new TraceException(fname,$"Errore nel parametro week: {week} non corrisponde alla lunghezza attesa {Global.WEEKPLAN_LENGTH}");
-            if(late < 1)
-                throw new TraceException(fname, $"Errore nel parametro \"Late\": {late} deve essere >= 1");
-            var year = week.Substring(0, Global.YEAR_LENGTH);
-            var wk = week.Substring(Global.YEAR_LENGTH - 1, Global.WEEK_LENGTH);
-            --- ricomincia da qui
+            try
+            {
+                List<string> retval = new List<string>();
+                if (week.Length != Global.WEEKPLAN_LENGTH)
+                    throw new TraceException(fname, $"Errore nel parametro week: {week} non corrisponde alla lunghezza attesa {Global.WEEKPLAN_LENGTH}");
+                if (late < 1)
+                    throw new TraceException(fname, $"Errore nel parametro \"Late\": {late} deve essere >= 1");
+                var year = Convert.ToInt32(week.Substring(0, Global.YEAR_LENGTH));
+                var wk = Convert.ToInt32(week.Substring(Global.YEAR_LENGTH, Global.WEEK_LENGTH));
+                do
+                {
+                    var newwk = wk - late;
+                    if (newwk == 0)
+                    {
+                        --year;
+                        newwk = GetWeeksInYear(year);
+                    }
+                    retval.Add(year.ToString()+newwk);
+                    --late;
+                } while (late > 0);
+
+                return retval;
+            }
+            catch (TraceException e)
+            {
+                Console.WriteLine(e.TraceMessage);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw new TraceException(fname, e.Message);
+            }
         }
 
       

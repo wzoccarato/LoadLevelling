@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using LoadL.DataLayer.DbTables;
+using LoadL.Infrastructure;
+using static LoadL.CalcExtendedLogics.Helper;
 
 namespace LoadL.CalcExtendedLogics
 {
@@ -53,6 +56,17 @@ namespace LoadL.CalcExtendedLogics
         {
             _list.Clear();
         }
+
+        public List<LoadLevellingWork> GetByWeek(string week)
+        {
+            List<LoadLevellingWork> wklist = new List<LoadLevellingWork>();
+            if (ValidateWeekFormat(week))
+            {
+                wklist = (from rec in _list where rec.TCH_WEEK == week select rec).ToList();
+            }
+            return wklist;
+        }
+
 
     }
 }
