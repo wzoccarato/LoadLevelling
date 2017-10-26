@@ -44,7 +44,7 @@
     <Compile Include="Defines.cs" />
     <Compile Include="ElementsList.cs" />
     <Compile Include="Helper.cs" />
-    <Compile Include="LlWork.cs" />
+    <Compile Include="LlWrapperClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ElementsFifo.cs" />
   </ItemGroup>

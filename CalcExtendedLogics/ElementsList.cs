@@ -19,6 +19,8 @@ namespace LoadL.CalcExtendedLogics
             _list = new List<LoadLevellingWork>();
         }
 
+        public int Count => _list.Count;
+
         public void AddElement(LoadLevellingWork newelement)
         {
             if (!_list.Contains(newelement))
@@ -39,6 +41,8 @@ namespace LoadL.CalcExtendedLogics
         }
 
         public LoadLevellingWork GetLast() => _list.Count > 0 ? _list.Last() : null;
+
+        public LoadLevellingWork GetFirst() => _list.Count > 0 ? _list.First() : null;
 
         public LoadLevellingWork RemoveLast()
         {
