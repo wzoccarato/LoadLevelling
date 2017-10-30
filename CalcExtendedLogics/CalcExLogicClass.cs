@@ -452,11 +452,16 @@ namespace LoadL.CalcExtendedLogics
                     var wk = Convert.ToInt32(week.Substring(Global.YEAR_LENGTH, Global.WEEK_LENGTH));
                     do
                     {
-                        var newwk = wk - late;
-                        if (newwk == 0)
+                        int newwk;
+                        if (wk - late <= 0)
                         {
                             --year;
-                            newwk = GetWeeksInYear(year);
+                            newwk = GetWeeksInYear(year) + wk - late;
+
+                        }
+                        else
+                        {
+                            newwk = wk - late;
                         }
                         retval.Add(year.ToString() + $"{newwk:D2}");
                         --late;
@@ -500,12 +505,16 @@ namespace LoadL.CalcExtendedLogics
                     int val = 1;
                     do
                     {
+                        int newwk = 0;
                         var current = GetWeeksInYear(year);
-                        var newwk = wk + val;
-                        if (newwk == current)
+                        if (wk + val >= current)
                         {
                             ++year;
-                            newwk = 1;
+                            newwk = wk + val - current + 1;
+                        }
+                        else
+                        {
+                            newwk = wk + val;
                         }
                         retval.Add(year.ToString() + $"{newwk:D2}");
                         ++val;
@@ -538,19 +547,20 @@ namespace LoadL.CalcExtendedLogics
             // Le richieste pendenti devono essere soddisfatte raggruppandole per priorità.
             // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
             // la percentuale reciproca delle richieste
-            var cap = llw.First().Capacity;     // e' requisito che tutte la Capacity sia uniforma per tutta la week
+            var totcap = llw.First().Capacity;     // e' requisito che tutte la Capacity sia uniforma per tutta la week
+            var cap = totcap;
             var allocated = 0.0;
             foreach (var rec in priorities)
             {
-                double total = llw.Where(r => (int) r.Priority == rec.priority).Sum(t => t.Required);
+                // disponibilita' totale richiesta
+                double totreq = llw.Where(r => (int) r.Priority == rec.priority).Sum(t => t.Required);
 
                 foreach (var el in llw.Where(r => (int)r.Priority == rec.priority))
                 {
                     if (cap > 0)
                     {
-                        var peso = el.Required / total;
-                        var toallocate = el.Required * peso;
-                        if (toallocate <= el.Capacity)
+                        var toallocate = totcap * el.Required / totreq;
+                        if (toallocate <= cap)
                         {
                             cap -= toallocate;
                             el.Required -= toallocate;
