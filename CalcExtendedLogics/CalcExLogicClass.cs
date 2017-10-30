@@ -7,7 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using System.Threading;
+using System.Xml.Schema;
 using LoadL.DataLayer.DbTables;
 using LoadL.Infrastructure;
 using LoadL.Infrastructure.Abstract;
@@ -22,9 +24,7 @@ namespace LoadL.CalcExtendedLogics
         private IList<Schema> _schema;                  // lista contenente la conversione della DataTable Schema
         private IEnumerable<string>_plan_bu;            // lista contenente tutti i PLAN_BU distinct
         private IEnumerable<string> _flag_hr;           // lista contenente tutti i FLAG_HR distinct
-        private readonly ElementsList _waitList;        // contiene tutti i record relativi alle week in attesa per l'elaborazione
-        private readonly ElementsList _sortedweeklist;  // contiene la lista sortata per week e per priorita' dei record filtrati per plan_bu,flag_hr e production?category
-
+        
         private readonly ILoadLevelling _iloadl;
 
         //private int _totcount;
@@ -43,8 +43,6 @@ namespace LoadL.CalcExtendedLogics
 
             _plan_bu = new List<string>();
             _flag_hr = new List<string>();
-            _waitList = new ElementsList();
-            _sortedweeklist = new ElementsList();
             
 
             _iloadl = new LlWrapperClass(new List<LoadLevellingWork>());
@@ -249,6 +247,13 @@ namespace LoadL.CalcExtendedLogics
                         //var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
                         var prodCategory = _iloadl.GetDistinctProductionCategory(pbu, fhr);
 
+                        // sortedweek list contiene la lista sortata per week e per priorita'
+                        // dei record filtrati per plan_bu,flag_hr e production_category
+                        ElementsList sortedweeklist = new ElementsList();
+                        // contiene tutti i record relativi alle week in attesa per l'elaborazione
+                        // sempre tutto filtrato come sopra
+                        ElementsList waitList = new ElementsList();        
+
                         foreach (var pc in prodCategory)
                         {
                             Console.WriteLine($"Production_category = {pc}");
@@ -256,23 +261,22 @@ namespace LoadL.CalcExtendedLogics
                             // ordina per WEEK_PLAN e poi per Priority
                             //var sortedtable = ll.OrderBy(g => g.WEEK_PLAN).ThenBy(h => h.Priority).ToList();
 
-                            // ATTENZIONE sortedweeklist E' DIVENTATO UN OGGETTO ELEMENTSLIST
-                            _sortedweeklist.AddRange(_iloadl.ListByWeekAndPriority(pbu, fhr, pc));
+                            sortedweeklist.AddRange(_iloadl.ListByWeekAndPriority(pbu, fhr, pc));
 
-                            Console.WriteLine($"Record da elaborare per {pc} = {_sortedweeklist.Count}");
+                            Console.WriteLine($"Record da elaborare per {pc} = {sortedweeklist.Count}");
 
-                            if (_sortedweeklist.Count > 0)
+                            if (sortedweeklist.Count > 0)
                             {
                                 do
                                 {
-                                    var wte = _sortedweeklist.GetFirst().WEEK_PLAN;
+                                    var wte = sortedweeklist.GetFirst().WEEK_PLAN;
 
                                     // foreach(WEEK_PLAN).....
                                     // estrae dalla lista sortata soltanto i record relativi alla 
                                     // week che deve essere elaborata. Questa lista e' gia' ordinata per 
                                     // priorita' decrescente (la priorita' piu' alta ha il numero piu' basso).
                                     ElementsList weektoelab = new ElementsList();
-                                    weektoelab.AddRange(_sortedweeklist.GetByWeek(wte));
+                                    weektoelab.AddRange(sortedweeklist.GetByWeek(wte));
 
                                     //var count = toelaborate.Count(s => s.Capacity > 0);
                                     //Console.WriteLine($"Count Capacity != 0: {count}");
@@ -285,10 +289,10 @@ namespace LoadL.CalcExtendedLogics
                                     //Console.WriteLine($"record della WEEK {wte} totali da elaborare: {toelaborate.Count}");
                                     //IList<LoadLevellingWork> toelaborate1 = sortedweeklist.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
                                     //Console.WriteLine($"record della WEEK {wte} con \"Required\" diverso da 0: {toelaborate1.Count}");
-                                    // elabora la week contenuta nella lista ordinata.
-                                    ElaborateWeek(weektoelab,_sortedweeklist);
-                                    // rimuove da sortedtable i records appena elaborati
-                                    sortedweeklist.RemoveAll(r => r.WEEK_PLAN == wte);
+                                    // elabora la week contenuta nella lista ordinata weektoelab
+                                    ElaborateWeek(weektoelab,sortedweeklist,waitList);
+                                    // rimuove da sortedlist i records appena elaborati
+                                    sortedweeklist.RemoveByWeekPlan(wte);
 
                                     //Console.WriteLine($"prossimo = {toelaborate.ElementAt(0).WEEK_PLAN}");
                                     //Console.WriteLine("Premere un tasto...");
@@ -322,7 +326,8 @@ namespace LoadL.CalcExtendedLogics
         /// </summary>
         /// <param name="toelaborate">Records relativi alla settimana da elaborare</param>
         /// <param name="sortedweeks"> contiene la lista sortata per week e per priorita' dei record filtrati per plan_bu,flag_hr e production_category</param>
-        private void ElaborateWeek(IList<LoadLevellingWork> toelaborate,IList<LoadLevellingWork> sortedweeks)
+        /// <param name="waitlist"> contiene la lista sortata dei record delle settimasne la cui elaborazione non e' ancora completata</param>
+        private void ElaborateWeek(ElementsList toelaborate,ElementsList sortedweeks,ElementsList waitlist)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
@@ -330,14 +335,13 @@ namespace LoadL.CalcExtendedLogics
                 if (toelaborate.Count > 0)
                 {
                     // verifica di consistenza. si puo' togliere una volta consolidata
-                    var ll = toelaborate.Select(r => r.Capacity).Distinct().ToList();
-                    if (ll.Count > 1)
+                    if(!toelaborate.ValidateList())
                     {
                         string message =
-                            $"Capacy non è la stessa per tutta la WEEK_PLAN. Week = {toelaborate[0].WEEK_PLAN}, Numero di elementi distict = {ll.Count}";
+                            $"Capacy non è la stessa per tutta la WEEK_PLAN. Week = {toelaborate.GetFirst().WEEK_PLAN}";
                         throw new TraceException(fname, message);
                     }
-                    if (toelaborate[0].Capacity > 0)
+                    if (toelaborate.GetFirst().Capacity > 0) // la capacity deve essere uguale per tutti i record, per requisito
                     {
                         // prima elabora le richieste in attesa, poi elabora
                         // la settimana che e' stata passata in argomento
@@ -345,7 +349,7 @@ namespace LoadL.CalcExtendedLogics
                         // a questa funzione passo soltanto il parametro Late, che fissa
                         // quante settimane indietro sia possibile elaborare
                         // tronca Late a intero
-                        IList<LoadLevellingWork> waiting = GetWaitingRequests(toelaborate[0].WEEK_PLAN,(int)toelaborate[0].Late);
+                        IList<LoadLevellingWork> waiting = GetWaitingRequests(toelaborate.GetFirst().WEEK_PLAN,(int)toelaborate.GetFirst().Late,waitlist);
                         if (waiting.Count > 0)
                         {
                             foreach (var rec in waiting)
@@ -354,15 +358,15 @@ namespace LoadL.CalcExtendedLogics
                             }
                         }
                         // elabora le richieste relative ai record della settimana corrente
-                        // Le richieste sono gia' state inderite con priorita' decrescente
+                        // Le richieste sono gia' state inserite con priorita' decrescente
                         ElabCurrentWeekRequests(toelaborate);
                         // se rimane capacità residua,
                         // anticipa la lavorazione delle settimane successive
                         if(toelaborate.Count>0)
                         {
-                            if(toelaborate[0].Capacity > 0)     // la capacity è uguale per tutti i record
+                            if(toelaborate.GetFirst().Capacity > 0)     // la capacity è uguale per tutti i record
                             {
-                                IList<LoadLevellingWork> noveup = GetAheadRequests(toelaborate[0].WEEK_PLAN, (int)toelaborate[0].Ahead,sortedweeks);
+                                IList<LoadLevellingWork> noveup = GetAheadRequests(toelaborate.GetFirst().WEEK_PLAN, (int)toelaborate.GetFirst().Ahead,sortedweeks);
                                 // TODO continua da qui
                             }
                         }
@@ -372,7 +376,8 @@ namespace LoadL.CalcExtendedLogics
                         // solo per le richieste relative alla settimana in elaborazione
                         // prenota i records per l'elaborazione "Late"
                         // la richiesta viene accodata per l'elaborazione successiva
-                        EnqueueRequests(toelaborate);
+                        // TODO Verificare quella che segue
+                        waitlist.MergeElements(toelaborate);
                     }
                 }
             }
@@ -398,31 +403,30 @@ namespace LoadL.CalcExtendedLogics
         /// </summary>
         /// <param name="late">numero di settimane delle quali e' possibile andare a ritroso</param>
         /// <param name="weekplan">identificativo della settimana correntemente in elaborazione</param>
-        /// <returns></returns>
-        private IList<LoadLevellingWork> GetWaitingRequests(string weekplan, int late)
+        /// <param name="waitlist">La lista completa delle settimane in attesa di elaborazione</param>
+        /// <returns>Ritorna la lista delle richieste attesa estratte</returns>
+        private IList<LoadLevellingWork> GetWaitingRequests(string weekplan, int late,ElementsList waitlist)
         {
             List<string> lateweeks = GetLateWeeks(weekplan,late);
-            // ricerca nella lista _waitlist 
-            return (from el in lateweeks select _waitList.GetByWeek(el) into wklist where wklist.Count > 0 from r in wklist select r).ToList();
-        }
-
-        private IList<LoadLevellingWork> GetAheadRequests(string weekplan, int ahead,IList<LoadLevellingWork> sortedweeks)
-        {
-            List<string> aheadweeks = GetAheadWeeks(weekplan, ahead);
-            return (from el in aheadweeks select sortedweeks.GetB  )
-
+            return (from el in lateweeks select waitlist.GetByWeek(el) into wklist where wklist.Count > 0 from r in wklist select r).ToList();
         }
 
         /// <summary>
-        /// Accoda i record per l'elaborazione nelle settimane successive
+        /// Riceve in argomento il parametro WEEK_PLAN e il parametro ahead
+        /// relativo alla settimana in elaborazione.
+        /// consulta la coda delle settimane da elaborare,
+        /// e ritorna una lista contenente soltanto quelle che 
+        /// soddisfano al parametro ahead (numero di settimane elaborabili
+        /// in anticipoo) ricevuto in argomento
         /// </summary>
-        /// <param name="elements"></param>
-        private void EnqueueRequests(IList<LoadLevellingWork> elements)
+        /// <param name="ahead">numero di settimane elaborabili in anticipo, a partire da weekplan</param>
+        /// <param name="weekplan">identificativo della settimana correntemente in elaborazione</param>
+        /// <param name="sortedweeks">La lista completa delle settimane in attesa di elaborazione</param>
+        /// <returns>Ritorna la lista delle richieste attesa estratte</returns>
+        private IList<LoadLevellingWork> GetAheadRequests(string weekplan, int ahead,ElementsList sortedweeks)
         {
-            if (elements?.Count > 0)
-            {
-                _waitList.AddRange(elements);
-            }
+            List<string> aheadweeks = GetAheadWeeks(weekplan, ahead);
+            return (from el in aheadweeks select sortedweeks.GetByWeek(el) into wklist where wklist.Count > 0 from r in wklist select r).ToList();
         }
 
         /// <summary>
@@ -454,7 +458,7 @@ namespace LoadL.CalcExtendedLogics
                             --year;
                             newwk = GetWeeksInYear(year);
                         }
-                        retval.Add(year.ToString() + newwk);
+                        retval.Add(year.ToString() + $"{newwk:D2}");
                         --late;
                     } while (late > 0);
                 }
@@ -503,7 +507,7 @@ namespace LoadL.CalcExtendedLogics
                             ++year;
                             newwk = 1;
                         }
-                        retval.Add(year.ToString() + newwk);
+                        retval.Add(year.ToString() + $"{newwk:D2}");
                         ++val;
                     } while ( val <= ahead);
                 }
@@ -521,9 +525,52 @@ namespace LoadL.CalcExtendedLogics
             }
         }
 
-        private void ElabCurrentWeekRequests(IList<LoadLevellingWork>weekrecords)
+        private void ElabCurrentWeekRequests(ElementsList weekrecords)
         {
-            throw new NotImplementedException();
+            List<LoadLevellingWork> llw = weekrecords.GetList();
+            // la ricerca viene eseguita in ordine di priorità dei record che richiedono
+            // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
+            // a priorità più elevata.
+            var priorities = (from rec in llw
+                              group rec by rec.Priority into g
+                              orderby g.Key, g.Count()
+                              select new {priority = (int)g.Key, count=g.Count()}).ToList();
+            // Le richieste pendenti devono essere soddisfatte raggruppandole per priorità.
+            // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
+            // la percentuale reciproca delle richieste
+            var cap = llw.First().Capacity;     // e' requisito che tutte la Capacity sia uniforma per tutta la week
+            var allocated = 0.0;
+            foreach (var rec in priorities)
+            {
+                double total = llw.Where(r => (int) r.Priority == rec.priority).Sum(t => t.Required);
+
+                foreach (var el in llw.Where(r => (int)r.Priority == rec.priority))
+                {
+                    if (cap > 0)
+                    {
+                        var peso = el.Required / total;
+                        var toallocate = el.Required * peso;
+                        if (toallocate <= el.Capacity)
+                        {
+                            cap -= toallocate;
+                            el.Required -= toallocate;
+                            allocated += toallocate;
+                        }
+                        else
+                        {
+                            el.Required -= cap;
+                            allocated += cap;
+                            cap = 0;
+                        }
+                    }
+                }
+                // aggiorna tutti i record nella week 
+                llw.Where(r => (int) r.Priority == rec.priority).ToList().ForEach(l =>
+                                                                                  {
+                                                                                      l.Capacity = cap;
+                                                                                      l.Allocated = allocated;
+                                                                                  });
+            }
         }
 
         /// <summary>
