@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection;
@@ -37,27 +38,53 @@ namespace LoadL.CalcExtendedLogics
 
         public void AddRange(IList<LoadLevellingWork> elements)
         {
-            foreach (var el in elements)
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
+            try
             {
-                if (!_list.Contains(el))
+                foreach (var el in elements)
                 {
                     _list.Add(el);
                 }
+                // Test di consistenza
+                var invalid = (from rec in _list group rec by rec.Id into g orderby g.Key, g.Count() select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count>1);
+                if (invalid)
+                    throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
+
             }
+            catch (TraceException e)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                throw new TraceException(fname, e.Message);
+            }
+
         }
 
         // merge delle due liste, rimuovento gli elementi doppi
         public void MergeElements(ElementsList el)
         {
-            // TODO: e' piu' efficiente cosi'?
-            //var ll = _list.Concat(_list).GroupBy(r => r.Id).Distinct().ToList();
-            
-            foreach (var rec in el._list)
+
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
+            try
             {
-                if (!_list.Contains(rec))
+                foreach (var rec in el._list)
                 {
                     _list.Add(rec);
                 }
+                // Test di consistenza
+                var invalid = (from rec in _list group rec by rec.Id into g orderby g.Key, g.Count() select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count > 1);
+                if (invalid)
+                    throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
+            }
+            catch (TraceException e)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                throw new TraceException(fname, e.Message);
             }
         }
 

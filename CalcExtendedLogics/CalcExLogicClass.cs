@@ -261,6 +261,8 @@ namespace LoadL.CalcExtendedLogics
                             // ordina per WEEK_PLAN e poi per Priority
                             //var sortedtable = ll.OrderBy(g => g.WEEK_PLAN).ThenBy(h => h.Priority).ToList();
 
+                            // tutti gli elementi con plan_bu, flag_hr e production_category,
+                            // sorteti per week_pan e poi per priority, vengono aggiunti alla sortedweeklist
                             sortedweeklist.AddRange(_iloadl.ListByWeekAndPriority(pbu, fhr, pc));
 
                             Console.WriteLine($"Record da elaborare per {pc} = {sortedweeklist.Count}");
@@ -496,6 +498,7 @@ namespace LoadL.CalcExtendedLogics
             try
             {
                 List<string> retval = new List<string>();
+                // Test
                 if (week.Length != Global.WEEKPLAN_LENGTH)
                     throw new TraceException(fname, $"Errore nel parametro week: {week} non corrisponde alla lunghezza attesa {Global.WEEKPLAN_LENGTH}");
                 if (ahead > 0)
@@ -536,51 +539,78 @@ namespace LoadL.CalcExtendedLogics
 
         private void ElabCurrentWeekRequests(ElementsList weekrecords)
         {
-            List<LoadLevellingWork> llw = weekrecords.GetList();
-            // la ricerca viene eseguita in ordine di priorità dei record che richiedono
-            // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
-            // a priorità più elevata.
-            var priorities = (from rec in llw
-                              group rec by rec.Priority into g
-                              orderby g.Key, g.Count()
-                              select new {priority = (int)g.Key, count=g.Count()}).ToList();
-            // Le richieste pendenti devono essere soddisfatte raggruppandole per priorità.
-            // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
-            // la percentuale reciproca delle richieste
-            var totcap = llw.First().Capacity;     // e' requisito che tutte la Capacity sia uniforma per tutta la week
-            var cap = totcap;
-            var allocated = 0.0;
-            foreach (var rec in priorities)
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
+            try
             {
-                // disponibilita' totale richiesta
-                double totreq = llw.Where(r => (int) r.Priority == rec.priority).Sum(t => t.Required);
-
-                foreach (var el in llw.Where(r => (int)r.Priority == rec.priority))
+                List<LoadLevellingWork> llw = weekrecords.GetList();
+                // la ricerca viene eseguita in ordine di priorità dei record che richiedono
+                // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
+                // a priorità più elevata.
+                var priorities = (from rec in llw
+                                  group rec by rec.Priority into g
+                                  orderby g.Key, g.Count()
+                                  select new { priority = (int)g.Key, count = g.Count() }).ToList();
+                // Le richieste pendenti devono essere soddisfatte raggruppandole per priorità.
+                // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
+                // la percentuale reciproca delle richieste
+                var initialcap = llw.First().Capacity;     // e' requisito che tutte la Capacity sia uniforma per tutta la week
+                var cap = initialcap;
+                var allocated = 0.0;
+                foreach (var rec in priorities)
                 {
-                    if (cap > 0)
+                    // disponibilita' totale richiesta
+                    double totreq = llw.Where(r => (int)r.Priority == rec.priority).Sum(t => t.Required);
+
+                    foreach (var el in llw.Where(r => (int)r.Priority == rec.priority))
                     {
-                        var toallocate = totcap * el.Required / totreq;
-                        if (toallocate <= cap)
+                        if (cap > 0)
                         {
-                            cap -= toallocate;
-                            el.Required -= toallocate;
-                            allocated += toallocate;
-                        }
-                        else
-                        {
-                            el.Required -= cap;
-                            allocated += cap;
-                            cap = 0;
+                            var toallocate = initialcap * el.Required / totreq;
+                            if (toallocate <= cap)
+                            {
+                                cap -= toallocate;
+                                el.Required -= toallocate;
+                                // Test
+                                if (el.Required < 0)
+                                    throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
+                                allocated += toallocate;
+                            }
+                            else
+                            {
+                                el.Required -= cap;
+                                // Test
+                                if (el.Required < 0)
+                                    throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
+                                allocated += cap;
+                                cap = 0;
+                            }
                         }
                     }
+                    if (cap < Global.EPSILON)
+                    {
+                        cap = 0;
+                    }
+                    // aggiorna tutti i record nella week 
+                    llw.Where(r => (int)r.Priority == rec.priority).ToList().ForEach(l =>
+                    {
+                        //l.Allocated = Math.Round(allocated,Global.ROUNDDIGITS);
+                        l.Allocated = allocated;
+                    });
                 }
-                // aggiorna tutti i record nella week 
-                llw.Where(r => (int) r.Priority == rec.priority).ToList().ForEach(l =>
-                                                                                  {
-                                                                                      l.Capacity = cap;
-                                                                                      l.Allocated = allocated;
-                                                                                  });
+                // alla fine uniforma tutti i record della week alla medesima Capacity
+                llw.ForEach(l => l.Capacity = cap);
             }
+            catch (TraceException e)
+            {
+                Console.WriteLine(e.TraceMessage);
+                throw;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw new TraceException(fname, e.Message);
+            }
+
         }
 
         /// <summary>

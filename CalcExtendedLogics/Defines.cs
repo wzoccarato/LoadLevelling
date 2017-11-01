@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Net.NetworkInformation;
+using System.Security.Cryptography;
 
 namespace LoadL.CalcExtendedLogics
 {
@@ -27,5 +28,7 @@ namespace LoadL.CalcExtendedLogics
         public const int WEEK_LENGTH = 2;       // lunghezza in caratteri della componente WEEK
         public const int MINYEAR = 2010;        // anno minimo accettato dal programma
         public const int MAXYEAR = 2100;        // anno massimo accettato dal programma
+        public const double EPSILON = 0.01;     // epsilon di arrotondamento   
+        public const int ROUNDDIGITS = 2;      // 2 digits di arrotondamento per i numeri double
     }
 }
