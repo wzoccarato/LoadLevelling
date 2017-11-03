@@ -565,25 +565,38 @@ namespace LoadL.CalcExtendedLogics
                     {
                         if (cap > 0)
                         {
-                            var toallocate = initialcap * el.Required / totreq;
-                            if (toallocate <= cap)
+                            if (totreq < initialcap)
                             {
-                                cap -= toallocate;
-                                el.Required -= toallocate;
-                                // Test
-                                if (el.Required < 0)
-                                    throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
-                                allocated += toallocate;
+                                // in questo caso tutto il richiesto viene allocato
+                                cap -= el.Required;
+                                el.Required = 0;
+                                allocated += el.Required;
                             }
                             else
                             {
-                                el.Required -= cap;
-                                // Test
-                                if (el.Required < 0)
-                                    throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
-                                allocated += cap;
-                                cap = 0;
+                                // in questo caso il richiesto deve essere allocato in 
+                                // quantita' proporzionale a ciascuna richiesta
+                                var toallocate = initialcap * el.Required / totreq;
+                                if (toallocate <= cap)
+                                {
+                                    cap -= toallocate;
+                                    el.Required -= toallocate;
+                                    // Test
+                                    if (el.Required < 0)
+                                        throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
+                                    allocated += toallocate;
+                                }
+                                else
+                                {
+                                    el.Required -= cap;
+                                    // Test
+                                    if (el.Required < 0)
+                                        throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
+                                    allocated += cap;
+                                    cap = 0;
+                                }
                             }
+
                         }
                     }
                     if (cap < Global.EPSILON)
