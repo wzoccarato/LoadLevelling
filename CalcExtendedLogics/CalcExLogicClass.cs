@@ -569,34 +569,45 @@ namespace LoadL.CalcExtendedLogics
                             {
                                 // in questo caso tutto il richiesto viene allocato
                                 cap -= el.Required;
-                                el.Required = 0;
+                                // TODO con Required == 0 bisogna toglierlo da qui
+                                el.Required = 0;            // la richiesta e' stata soddisfatta
                                 allocated += el.Required;
+                                el.TCH_WEEK = el.WEEK_PLAN; 
                             }
                             else
                             {
                                 // in questo caso il richiesto deve essere allocato in 
                                 // quantita' proporzionale a ciascuna richiesta
                                 var toallocate = initialcap * el.Required / totreq;
+                                if(toallocate < Global.EPSILON)
+                                    throw new TraceException(fname, $"Quantità da allocare incosistente: {toallocate}");
                                 if (toallocate <= cap)
                                 {
                                     cap -= toallocate;
                                     el.Required -= toallocate;
                                     // Test
                                     if (el.Required < 0)
-                                        throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
+                                        throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                    // TODO se arriva a required == 0, bisogna toglierlo da qui
+                                    if (el.Required < Global.EPSILON)
+                                        el.Required = 0;    // la richiesta e' stata soddisfatta
                                     allocated += toallocate;
+                                    el.TCH_WEEK = el.WEEK_PLAN; 
                                 }
                                 else
                                 {
                                     el.Required -= cap;
                                     // Test
                                     if (el.Required < 0)
-                                        throw new TraceException(fname, $"Reguired è inconsistente: {el.Required}");
+                                        throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                    // TODO se arriva a required == 0, bisogna toglierlo da qui
+                                    if (el.Required < Global.EPSILON)
+                                        el.Required = 0;    // la richiesta e' stata soddisfatta
                                     allocated += cap;
                                     cap = 0;
+                                    el.TCH_WEEK = el.WEEK_PLAN;
                                 }
                             }
-
                         }
                     }
                     if (cap < Global.EPSILON)
