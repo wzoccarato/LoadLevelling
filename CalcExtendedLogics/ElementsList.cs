@@ -13,8 +13,10 @@ using static LoadL.CalcExtendedLogics.Helper;
 
 namespace LoadL.CalcExtendedLogics
 {
-    public class ElementsList
+    public class ElementsList:IDisposable
     {
+        private bool _isDisposed = false;
+
         private List<LoadLevellingWork> _list;
         public ElementsList()
         {
@@ -30,11 +32,27 @@ namespace LoadL.CalcExtendedLogics
 
         public void AddElement(LoadLevellingWork newelement)
         {
-            if (!_list.Contains(newelement))
+
+            var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
+            try
             {
+                // Test di consistenza
+                var invalid = (from rec in _list where rec.Id == newelement.Id select rec).Any();
+                if (invalid)
+                    throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
                 _list.Add(newelement);
             }
+            catch (TraceException e)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+                throw new TraceException(fname, e.Message);
+            }
         }
+
+        public bool RemoveElement(LoadLevellingWork toremove) => _list.Remove(toremove);
 
         public void AddRange(IList<LoadLevellingWork> elements)
         {
@@ -104,6 +122,7 @@ namespace LoadL.CalcExtendedLogics
             return retval;
         }
 
+
         public void Purge()
         {
             _list.Clear();
@@ -165,6 +184,33 @@ namespace LoadL.CalcExtendedLogics
         public bool ValidateList()
         {
             return _list.Select(r => r.Capacity).Distinct().ToList().Count == 1;
+        }
+
+        // per una descrizione di questa tecnica di utilizzo di Dispose,
+        // vedere c# 4 e .NET 4 *Nagel e altri, pag.309
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_isDisposed)
+            {
+                // qui eseguire le eventuali pulizie degli gestiti
+            }
+            _isDisposed = true;
+        }
+
+        // TODO: Override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
+        //~ElementsList()
+        //{
+        //    Dispose(false);
+        //}
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+            // TODO: uncomment the following line if the finalizer is overridden above.
+            GC.SuppressFinalize(this);
         }
     }
 }

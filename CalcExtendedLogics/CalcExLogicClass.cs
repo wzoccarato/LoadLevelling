@@ -1,15 +1,9 @@
 ﻿using System;
-using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using System.Threading;
-using System.Xml.Schema;
 using LoadL.DataLayer.DbTables;
 using LoadL.Infrastructure;
 using LoadL.Infrastructure.Abstract;
@@ -22,8 +16,8 @@ namespace LoadL.CalcExtendedLogics
     {
         //private IList<LoadLevellingWork> _loadLevelling;
         private IList<Schema> _schema;                  // lista contenente la conversione della DataTable Schema
-        private IEnumerable<string>_plan_bu;            // lista contenente tutti i PLAN_BU distinct
-        private IEnumerable<string> _flag_hr;           // lista contenente tutti i FLAG_HR distinct
+        private IEnumerable<string>_planBu;            // lista contenente tutti i PLAN_BU distinct
+        private IEnumerable<string> _flagHr;           // lista contenente tutti i FLAG_HR distinct
         
         private readonly ILoadLevelling _iloadl;
 
@@ -41,8 +35,8 @@ namespace LoadL.CalcExtendedLogics
             _schema = new List<Schema>();
             //_plan_bu = new List<LoadLevellingWork>();
 
-            _plan_bu = new List<string>();
-            _flag_hr = new List<string>();
+            _planBu = new List<string>();
+            _flagHr = new List<string>();
             
 
             _iloadl = new LlWrapperClass(new List<LoadLevellingWork>());
@@ -78,10 +72,30 @@ namespace LoadL.CalcExtendedLogics
 
                         Initialize(targetdt, schemadt);
 
-                        OptimizeWorkload();
+                        var AllocatedElements = OptimizeWorkload();
 
-                        break;
-                    default:
+                        foreach (var el in AllocatedElements.GetList())
+                        {
+
+                            // aggiorna il dataset con i nuovi elementi
+                            targetdt.Rows.Add(null,
+                                el.PRODUCTION_CATEGORY,
+                                el.IND_SEASONAL_STATUS,
+                                el.TCH_WEEK,
+                                el.PLANNING_LEVEL,
+                                el.Event,
+                                el.WEEK_PLAN,
+                                el.F1,el.F2,el.F3,
+                                el.Ahead,
+                                el.Late,
+                                el.Priority,
+                                el.Capacity,
+                                el.Required,
+                                el.PLAN_BU,
+                                el.FLAG_HR,
+                                el.Allocated);
+                        }
+
                         break;
                 }
                 return true; 
@@ -208,10 +222,9 @@ namespace LoadL.CalcExtendedLogics
         /// 5. La lista cosi' ottenuta viene ordinata per WEEK_PLAN crescente e per Priority crescente (priorita' piu' alta a valore piu' basso)
         /// 6. di questa lista viene poi eleborata una settimana alla volta
         /// </summary>
-        private void OptimizeWorkload()
+        private ElementsList OptimizeWorkload()
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
-
             try
             {
                 //var pbu = from r in _loadLevelling
@@ -226,19 +239,34 @@ namespace LoadL.CalcExtendedLogics
 
                 // PLAN_BU
                 //_plan_bu = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => l.Key).ToList();
-                _plan_bu = _iloadl.GetDistinctPlanBu();
+                _planBu = _iloadl.GetDistinctPlanBu();
 
-                foreach (var pbu in _plan_bu)
+                // sortedweek list contiene la lista sortata per week e per priorita'
+                // dei record filtrati per plan_bu,flag_hr e production_category
+                ElementsList sortedweeklist = new ElementsList();
+                // contiene tutti i record relativi alle week in attesa per l'elaborazione
+                // sempre tutto filtrato come sopra
+                ElementsList waitList = new ElementsList();
+                // contiene i record di richieste soddisfatte, cioe' 
+                // quelli il cui parametro Required e' arrivato a 0
+                ElementsList fulfilledList = new ElementsList();
+
+
+                foreach (var pbu in _planBu)
                 {
                     //Console.WriteLine($"planbu = {rec.planbu}, count = {rec.count}");
                     Console.WriteLine($"planbu = {pbu}");
 
                     // FLAG_HR
                     //_flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).ToList();
-                    _flag_hr = _iloadl.GetDistinctFlagHr(pbu);
+                    _flagHr = _iloadl.GetDistinctFlagHr(pbu);
 
+                    // azzera le liste di lavoro
+                    sortedweeklist.Purge();
+                    waitList.Purge();
+                    fulfilledList.Purge();
 
-                    foreach (var fhr in _flag_hr)
+                    foreach (var fhr in _flagHr)
                     {
                         //Console.WriteLine($"flaghr = {fhr.flag_hr}, count = {fhr.count}");
                         Console.WriteLine($"flaghr = {fhr}");
@@ -247,12 +275,6 @@ namespace LoadL.CalcExtendedLogics
                         //var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
                         var prodCategory = _iloadl.GetDistinctProductionCategory(pbu, fhr);
 
-                        // sortedweek list contiene la lista sortata per week e per priorita'
-                        // dei record filtrati per plan_bu,flag_hr e production_category
-                        ElementsList sortedweeklist = new ElementsList();
-                        // contiene tutti i record relativi alle week in attesa per l'elaborazione
-                        // sempre tutto filtrato come sopra
-                        ElementsList waitList = new ElementsList();        
 
                         foreach (var pc in prodCategory)
                         {
@@ -292,7 +314,7 @@ namespace LoadL.CalcExtendedLogics
                                     //IList<LoadLevellingWork> toelaborate1 = sortedweeklist.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
                                     //Console.WriteLine($"record della WEEK {wte} con \"Required\" diverso da 0: {toelaborate1.Count}");
                                     // elabora la week contenuta nella lista ordinata weektoelab
-                                    ElaborateWeek(weektoelab,sortedweeklist,waitList);
+                                    ElaborateWeek(weektoelab,sortedweeklist,waitList,fulfilledList);
                                     // rimuove da sortedlist i records appena elaborati
                                     sortedweeklist.RemoveByWeekPlan(wte);
 
@@ -307,7 +329,10 @@ namespace LoadL.CalcExtendedLogics
                             }
                         }
                     }
+                    // qui la lista delle allocazioni e' completa
+
                 }
+                return fulfilledList;
             }
             catch (TraceException e)
             {
@@ -328,8 +353,9 @@ namespace LoadL.CalcExtendedLogics
         /// </summary>
         /// <param name="toelaborate">Records relativi alla settimana da elaborare</param>
         /// <param name="sortedweeks"> contiene la lista sortata per week e per priorita' dei record filtrati per plan_bu,flag_hr e production_category</param>
-        /// <param name="waitlist"> contiene la lista sortata dei record delle settimasne la cui elaborazione non e' ancora completata</param>
-        private void ElaborateWeek(ElementsList toelaborate,ElementsList sortedweeks,ElementsList waitlist)
+        /// <param name="waitlist"> contiene la lista sortata dei record delle settimane la cui elaborazione non e' ancora completata</param>
+        /// <param name="completedrequests">contiene la lista dei record di cui è stata completata l'allocazione</param>
+        private void ElaborateWeek(ElementsList toelaborate,ElementsList sortedweeks,ElementsList waitlist,ElementsList completedrequests)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
@@ -354,14 +380,11 @@ namespace LoadL.CalcExtendedLogics
                         IList<LoadLevellingWork> waiting = GetWaitingRequests(toelaborate.GetFirst().WEEK_PLAN,(int)toelaborate.GetFirst().Late,waitlist);
                         if (waiting.Count > 0)
                         {
-                            foreach (var rec in waiting)
-                            {
-                                
-                            }
+                            ElabWaitingRequests(waiting, toelaborate, completedrequests);
                         }
                         // elabora le richieste relative ai record della settimana corrente
                         // Le richieste sono gia' state inserite con priorita' decrescente
-                        ElabCurrentWeekRequests(toelaborate);
+                        ElabCurrentWeekRequests(toelaborate,completedrequests);
                         // se rimane capacità residua,
                         // anticipa la lavorazione delle settimane successive
                         if(toelaborate.Count>0)
@@ -371,6 +394,10 @@ namespace LoadL.CalcExtendedLogics
                                 IList<LoadLevellingWork> noveup = GetAheadRequests(toelaborate.GetFirst().WEEK_PLAN, (int)toelaborate.GetFirst().Ahead,sortedweeks);
                                 // TODO continua da qui
                             }
+                            else
+                            {
+                                EnqueueRequests(waitlist, toelaborate);
+                            }
                         }
                     }
                     else
@@ -378,8 +405,7 @@ namespace LoadL.CalcExtendedLogics
                         // solo per le richieste relative alla settimana in elaborazione
                         // prenota i records per l'elaborazione "Late"
                         // la richiesta viene accodata per l'elaborazione successiva
-                        // TODO Verificare quella che segue
-                        waitlist.MergeElements(toelaborate);
+                        EnqueueRequests(waitlist, toelaborate);
                     }
                 }
             }
@@ -392,6 +418,34 @@ namespace LoadL.CalcExtendedLogics
             {
                 Console.WriteLine(e);
                 throw new TraceException(fname, e.Message);
+            }
+        }
+
+
+        private void EnqueueRequests(ElementsList waitList, ElementsList toelaborate)
+        {
+            if (waitList != null)
+            {
+                if (toelaborate != null)
+                {
+                    // TODO Verificare quella che segue
+                    waitList.MergeElements(toelaborate);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Elabora le richieste pendenti, relative al parametro Late
+        /// </summary>
+        /// <param name="waiting"></param>
+        /// <param name="currenweek"></param>
+        /// <param name="completedrequests"></param>
+        private void ElabWaitingRequests(IList<LoadLevellingWork> waiting, ElementsList currenweek, ElementsList completedrequests)
+        {
+            foreach(var rec in waiting)
+            {
+
+
             }
         }
 
@@ -537,92 +591,119 @@ namespace LoadL.CalcExtendedLogics
             }
         }
 
-        private void ElabCurrentWeekRequests(ElementsList weekrecords)
+        private void ElabCurrentWeekRequests(ElementsList weekrecords,ElementsList completedrequests)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
-                List<LoadLevellingWork> llw = weekrecords.GetList();
-                // la ricerca viene eseguita in ordine di priorità dei record che richiedono
-                // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
-                // a priorità più elevata.
-                var priorities = (from rec in llw
-                                  group rec by rec.Priority into g
-                                  orderby g.Key, g.Count()
-                                  select new { priority = (int)g.Key, count = g.Count() }).ToList();
-                // Le richieste pendenti devono essere soddisfatte raggruppandole per priorità.
-                // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
-                // la percentuale reciproca delle richieste
-                var initialcap = llw.First().Capacity;     // e' requisito che tutte la Capacity sia uniforma per tutta la week
-                var cap = initialcap;
-                var allocated = 0.0;
-                foreach (var rec in priorities)
+                using (ElementsList tocomplete = new ElementsList())
                 {
-                    // disponibilita' totale richiesta
-                    double totreq = llw.Where(r => (int)r.Priority == rec.priority).Sum(t => t.Required);
 
-                    foreach (var el in llw.Where(r => (int)r.Priority == rec.priority))
+                    List<LoadLevellingWork> llw = weekrecords.GetList();
+                    //ElementsList tocomplete = new ElementsList();           // queesta lista e' temporanea
+                    // la ricerca viene eseguita in ordine di priorità dei record che richiedono
+                    // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
+                    // a priorità più elevata.
+                    var priorities = (from rec in llw
+                                      group rec by rec.Priority
+                                      into g
+                                      orderby g.Key, g.Count()
+                                      select new {priority = (int) g.Key, count = g.Count()}).ToList();
+                    // Le richieste pendenti devono essere soddisfatte raggruppandole per priorità.
+                    // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
+                    // la percentuale reciproca delle richieste
+                    var initialcap = llw.First().Capacity; // e' requisito che tutte la Capacity sia uniforma per tutta la week
+                    var cap = initialcap;
+                    var allocated = 0.0;
+                    foreach (var rec in priorities)
                     {
-                        if (cap > 0)
+                        // disponibilita' totale richiesta
+                        double totreq = llw.Where(r => (int) r.Priority == rec.priority).Sum(t => t.Required);
+
+                        foreach (var el in llw.Where(r => (int) r.Priority == rec.priority))
                         {
-                            if (totreq < initialcap)
+                            if (cap > 0)
                             {
-                                // in questo caso tutto il richiesto viene allocato
-                                cap -= el.Required;
-                                // TODO con Required == 0 bisogna toglierlo da qui
-                                el.Required = 0;            // la richiesta e' stata soddisfatta
-                                allocated += el.Required;
-                                el.TCH_WEEK = el.WEEK_PLAN; 
-                            }
-                            else
-                            {
-                                // in questo caso il richiesto deve essere allocato in 
-                                // quantita' proporzionale a ciascuna richiesta
-                                var toallocate = initialcap * el.Required / totreq;
-                                if(toallocate < Global.EPSILON)
-                                    throw new TraceException(fname, $"Quantità da allocare incosistente: {toallocate}");
-                                if (toallocate <= cap)
+                                if (totreq < initialcap)
                                 {
-                                    cap -= toallocate;
-                                    el.Required -= toallocate;
-                                    // Test
-                                    if (el.Required < 0)
-                                        throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                    // TODO se arriva a required == 0, bisogna toglierlo da qui
-                                    if (el.Required < Global.EPSILON)
-                                        el.Required = 0;    // la richiesta e' stata soddisfatta
-                                    allocated += toallocate;
-                                    el.TCH_WEEK = el.WEEK_PLAN; 
+                                    // in questo caso tutto il richiesto viene allocato
+                                    cap -= el.Required;
+                                    allocated += el.Required;
+                                    el.TCH_WEEK = el.WEEK_PLAN;
+                                    el.Allocated = Math.Round(el.Required, Global.ROUNDDIGITS);
+                                    el.Required = 0; // la richiesta e' stata soddisfatta
+                                    // con Required == 0 bisogna toglierlo da qui
+                                    tocomplete.AddElement(el);
                                 }
                                 else
                                 {
-                                    el.Required -= cap;
-                                    // Test
-                                    if (el.Required < 0)
-                                        throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                    // TODO se arriva a required == 0, bisogna toglierlo da qui
-                                    if (el.Required < Global.EPSILON)
-                                        el.Required = 0;    // la richiesta e' stata soddisfatta
-                                    allocated += cap;
-                                    cap = 0;
-                                    el.TCH_WEEK = el.WEEK_PLAN;
+                                    // in questo caso il richiesto deve essere allocato in 
+                                    // quantita' proporzionale a ciascuna richiesta
+                                    var toallocate = initialcap * el.Required / totreq;
+                                    if (toallocate > Global.EPSILON)
+                                    {
+
+                                        //throw new TraceException(fname, $"Quantità da allocare inconsistente: {toallocate}");
+                                        if (toallocate <= cap)
+                                        {
+                                            cap -= toallocate;
+                                            el.Required -= toallocate;
+                                            // Test
+                                            if (el.Required < 0)
+                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                            allocated += toallocate;
+                                            el.TCH_WEEK = el.WEEK_PLAN;
+                                            el.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS); 
+                                            // con Required == 0 bisogna toglierlo da qui
+                                            if (el.Required < Global.EPSILON)
+                                            {
+                                                el.Required = 0; // la richiesta e' stata soddisfatta
+                                                tocomplete.AddElement(el);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            el.Required -= cap;
+                                            // Test
+                                            if (el.Required < 0)
+                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                            // TODO se arriva a required == 0, bisogna toglierlo da qui
+                                            allocated += cap;
+                                            el.Allocated = Math.Round(cap, Global.ROUNDDIGITS);
+                                            cap = 0;
+                                            el.TCH_WEEK = el.WEEK_PLAN;
+                                            if (el.Required < Global.EPSILON)
+                                            {
+                                                el.Required = 0; // la richiesta e' stata soddisfatta
+                                                tocomplete.AddElement(el);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
+                        if (cap < Global.EPSILON)
+                        {
+                            cap = 0;
+                        }
+                        if (tocomplete.Count > 0)
+                        {
+                            foreach (var el in tocomplete.GetList())
+                            {
+                                weekrecords.RemoveElement(el);
+                            }
+                            completedrequests.AddRange(tocomplete.GetList());
+                            Console.WriteLine($"WEEK_PLAN: {tocomplete.GetFirst().WEEK_PLAN} Completati: {completedrequests.Count}, Rimanenti: {llw.Count}");
+                        }
+                        // aggiorna tutti i record nella week (che sono rimati alla allocazione totale)
+                        llw.Where(r => (int)r.Priority == rec.priority).ToList().ForEach(l =>
+                                                                                         {
+                                                                                             l.Allocated = Math.Round(allocated, Global.ROUNDDIGITS);
+                                                                                         });
                     }
-                    if (cap < Global.EPSILON)
-                    {
-                        cap = 0;
-                    }
-                    // aggiorna tutti i record nella week 
-                    llw.Where(r => (int)r.Priority == rec.priority).ToList().ForEach(l =>
-                    {
-                        //l.Allocated = Math.Round(allocated,Global.ROUNDDIGITS);
-                        l.Allocated = allocated;
-                    });
+                    // alla fine uniforma tutti i record della week (che sono rimasti) alla medesima Capacity
+                    llw.ForEach(l => l.Capacity = cap);
                 }
-                // alla fine uniforma tutti i record della week alla medesima Capacity
-                llw.ForEach(l => l.Capacity = cap);
             }
             catch (TraceException e)
             {
