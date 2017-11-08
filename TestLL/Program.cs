@@ -28,7 +28,7 @@ namespace LoadL.TestLL
             ds.Tables.Add(dt);
             ds.Tables.Add(schema);
 
-            celc.Execute(ds, "LoadL", "LoadLevelling");
+            celc.Execute(ds, "loadl", "LoadLevelling");
         }
 
         /// <summary>
