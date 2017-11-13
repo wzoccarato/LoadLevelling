@@ -79,9 +79,12 @@ namespace LoadL.Infrastructure.AccessLayer
              where rec.PLAN_BU == planbu && rec.FLAG_HR == flaghr
              select rec.PRODUCTION_CATEGORY).Distinct().ToList();
 
+        // TODO ripristinare questa, che è stata modificata a scopo di test
         public List<LoadLevellingWork> ListByWeekAndPriority(string planbu, string flaghr, string prodcat) =>
             (from rec in LoadLevellingWorkTable
-             where rec.PLAN_BU == planbu && rec.FLAG_HR == flaghr && rec.PRODUCTION_CATEGORY == prodcat orderby rec.WEEK_PLAN, rec.Priority
+             where rec.PLAN_BU == planbu && rec.FLAG_HR == flaghr && rec.PRODUCTION_CATEGORY == prodcat
+             && (rec.WEEK_PLAN == "201707" || rec.WEEK_PLAN == "201708" || rec.WEEK_PLAN == "201709")
+             orderby rec.WEEK_PLAN, rec.Priority
              select rec ).ToList();
 
         public IQueryable<Schema> SchemaTable => _context.Schema;
