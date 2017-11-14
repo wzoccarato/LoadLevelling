@@ -8,7 +8,7 @@ namespace LoadL.DataLayer.DbTables
     public class LoadLevellingWork
     {
         [Key]
-        public int Id { get; set; }
+        public int? Id { get; set; }
         [StringLength(2, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
         public string PRODUCTION_CATEGORY { get; set; }
         public string IND_SEASONAL_STATUS { get; set; }
@@ -33,5 +33,13 @@ namespace LoadL.DataLayer.DbTables
         [StringLength(1, ErrorMessage = "errore lunghezza stringa", MinimumLength = 1)]
         public string FLAG_HR { get; set; }             // FLAG_HR
         public double Allocated { get; set; }           // Allocated
+
+        // esegue una copia clone dell'oggetto
+        public LoadLevellingWork Clone()
+        {
+            LoadLevellingWork retval = (LoadLevellingWork)this.MemberwiseClone();
+            retval.Id = null;
+            return retval;
+        }
     }
 }

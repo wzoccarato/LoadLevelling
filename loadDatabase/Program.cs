@@ -118,7 +118,6 @@ namespace LoadL.loadDatabase
                         if (lbwp.Count > 0)
                         {
                             var rnd = new Random();
-
                             do
                             {
                                 var wte = lbwp.ElementAt(0).WEEK_PLAN;

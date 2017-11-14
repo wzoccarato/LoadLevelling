@@ -276,7 +276,6 @@ namespace LoadL.CalcExtendedLogics
                         //var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
                         var prodCategory = _iloadl.GetDistinctProductionCategory(pbu, fhr);
 
-
                         foreach (var pc in prodCategory)
                         {
                             Console.WriteLine($"Production_category = {pc}");
@@ -355,8 +354,8 @@ namespace LoadL.CalcExtendedLogics
         /// <param name="toelaborate">Records relativi alla settimana da elaborare</param>
         /// <param name="sortedweeks"> contiene la lista sortata per week e per priorita' dei record filtrati per plan_bu,flag_hr e production_category</param>
         /// <param name="waitlist"> contiene la lista sortata dei record delle settimane la cui elaborazione non e' ancora completata</param>
-        /// <param name="completedrequests">contiene la lista dei record di cui è stata completata l'allocazione</param>
-        private void ElaborateWeek(ElementsList toelaborate,ElementsList sortedweeks,ElementsList waitlist,ElementsList completedrequests)
+        /// <param name="appendedelements">contiene la lista dei record di cui è stata completata l'allocazione</param>
+        private void ElaborateWeek(ElementsList toelaborate,ElementsList sortedweeks,ElementsList waitlist,ElementsList appendedelements)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
@@ -381,11 +380,11 @@ namespace LoadL.CalcExtendedLogics
                         IList<LoadLevellingWork> waiting = GetWaitingRequests(toelaborate.GetFirst().WEEK_PLAN,(int)toelaborate.GetFirst().Late,waitlist);
                         if (waiting.Count > 0)
                         {
-                            ElabWaitingRequests(waiting, toelaborate, completedrequests);
+                            ElabWaitingRequests(waiting, toelaborate, appendedelements);
                         }
                         // elabora le richieste relative ai record della settimana corrente
                         // Le richieste sono gia' state inserite con priorita' decrescente
-                        ElabCurrentWeekRequests(toelaborate,completedrequests);
+                        ElabCurrentWeekRequests(toelaborate,appendedelements);
                         // se rimane capacità residua,
                         // anticipa la lavorazione delle settimane successive
                         if(toelaborate.Count>0)
@@ -393,7 +392,7 @@ namespace LoadL.CalcExtendedLogics
                             if(toelaborate.GetFirst().Capacity > 0)     // la capacity è uguale per tutti i record
                             {
                                 IList<LoadLevellingWork> moveup = GetAheadRequests(toelaborate.GetFirst().WEEK_PLAN, (int)toelaborate.GetFirst().Ahead,sortedweeks);
-                                ElabAheadRequests(moveup, toelaborate, completedrequests);
+                                ElabAheadRequests(moveup, toelaborate, appendedelements);
                                 // TODO continua da qui
                             }
                             else
@@ -500,7 +499,6 @@ namespace LoadL.CalcExtendedLogics
                         {
                             --year;
                             newwk = GetWeeksInYear(year) + wk - late;
-
                         }
                         else
                         {
@@ -578,12 +576,12 @@ namespace LoadL.CalcExtendedLogics
             }
         }
 
-        private void ElabCurrentWeekRequests(ElementsList weekrecords,ElementsList completedrequests)
+        private void ElabCurrentWeekRequests(ElementsList weekrecords,ElementsList appendedrequests)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
-                using (ElementsList tocomplete = new ElementsList())
+                using (ElementsList toappend = new ElementsList())
                 {
 
                     List<LoadLevellingWork> llw = weekrecords.GetList();
@@ -591,7 +589,7 @@ namespace LoadL.CalcExtendedLogics
                     // la ricerca viene eseguita in ordine di priorità dei record che richiedono
                     // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
                     // a priorità più elevata.
-                    var priorities = (from rec in llw
+                    var todo = (from rec in llw
                                       group rec by rec.Priority
                                       into g
                                       orderby g.Key, g.Count()
@@ -602,7 +600,7 @@ namespace LoadL.CalcExtendedLogics
                     var initialcap = llw.First().Capacity; // e' requisito che tutte la Capacity sia uniforma per tutta la week
                     var cap = initialcap;
                     var allocated = 0.0;
-                    foreach (var rec in priorities)
+                    foreach (var rec in todo)
                     {
                         initialcap -= allocated;
                         // disponibilita' totale richiesta
@@ -617,80 +615,83 @@ namespace LoadL.CalcExtendedLogics
                                     // in questo caso tutto il richiesto viene allocato
                                     cap -= el.Required;
                                     allocated += el.Required;
-                                    el.TCH_WEEK = el.WEEK_PLAN;
-                                    el.Allocated = Math.Round(el.Required, Global.ROUNDDIGITS);
-                                    el.Required = 0; // la richiesta e' stata soddisfatta
-                                    // con Required == 0 bisogna toglierlo da qui
-                                    tocomplete.AddElement(el);
-                                }
-                                else
-                                {
-                                    // in questo caso il richiesto deve essere allocato in 
-                                    // quantita' proporzionale a ciascuna richiesta
-                                    var toallocate = initialcap * el.Required / totreq;
-                                    if (toallocate > Global.EPSILON)
-                                    {
 
-                                        //throw new TraceException(fname, $"Quantità da allocare inconsistente: {toallocate}");
-                                        if (toallocate <= cap)
+                                    LoadLevellingWork newel = el.Clone();
+                                    newel.TCH_WEEK = el.WEEK_PLAN;
+                                    newel.Allocated = Math.Round(el.Required, Global.ROUNDDIGITS);
+                                    newel.Required = newel.Allocated; // se required == allocated allora la richiesta risulta soddisfatta 
+
+                                    el.Required = 0; // la richiesta e' stata soddisfatta
+                                    toappend.AddElement(newel);
+                                    break; // passa all'elemento successivo nella lista todo
+                                }
+                                // in questo caso il richiesto deve essere allocato in 
+                                // quantita' proporzionale a ciascuna richiesta
+                                var toallocate = initialcap * el.Required / totreq;
+                                if (toallocate > Global.EPSILON)
+                                {
+                                    //throw new TraceException(fname, $"Quantità da allocare inconsistente: {toallocate}");
+                                    if (toallocate <= cap)
+                                    {
+                                        cap -= toallocate;
+                                        el.Required -= toallocate;
+                                        // Test
+                                        if (el.Required < 0)
+                                            throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                        allocated += toallocate;
+
+                                        LoadLevellingWork newel = el.Clone();
+                                        newel.TCH_WEEK = el.WEEK_PLAN;
+                                        newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
+                                        newel.Required = el.Required;
+                                        newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
+                                        toappend.AddElement(newel);
+
+                                        if (Math.Abs(el.Required) < Global.EPSILON)
                                         {
-                                            cap -= toallocate;
-                                            el.Required -= toallocate;
-                                            // Test
-                                            if (el.Required < 0)
-                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                            allocated += toallocate;
-                                            el.TCH_WEEK = el.WEEK_PLAN;
-                                            el.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS); 
-                                            // con Required == 0 bisogna toglierlo da qui
-                                            if (Math.Abs(el.Required) < Global.EPSILON)
-                                            {
-                                                el.Required = 0; // la richiesta e' stata soddisfatta
-                                                tocomplete.AddElement(el);
-                                            }
+                                            el.Required = 0; // la richiesta e' stata soddisfatta
+                                            break; // passa all'elemento successivo nella lista todo
                                         }
-                                        else
+                                    }
+                                    else
+                                    {
+                                        el.Required -= cap;
+                                        // Test
+                                        if (el.Required < 0)
+                                            throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                        allocated += cap;
+                                        cap = 0;
+
+                                        LoadLevellingWork newel = el.Clone();
+                                        newel.TCH_WEEK = el.WEEK_PLAN;
+                                        newel.Allocated = el.Allocated;
+                                        newel.Required = el.Required;
+                                        newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
+                                        toappend.AddElement(newel);
+
+                                        if (Math.Abs(el.Required) < Global.EPSILON)
                                         {
-                                            el.Required -= cap;
-                                            // Test
-                                            if (el.Required < 0)
-                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                            // TODO se arriva a required == 0, bisogna toglierlo da qui
-                                            allocated += cap;
-                                            el.Allocated = Math.Round(cap, Global.ROUNDDIGITS);
-                                            cap = 0;
-                                            el.TCH_WEEK = el.WEEK_PLAN;
-                                            if (Math.Abs(el.Required) < Global.EPSILON)
-                                            {
-                                                el.Required = 0; // la richiesta e' stata soddisfatta
-                                                tocomplete.AddElement(el);
-                                            }
+                                            el.Required = 0; // la richiesta e' stata soddisfatta
+                                            break; // passa all'elemento successivo nella lista todo
                                         }
                                     }
                                 }
                             }
                         }
-                        if (Math.Abs(cap) < Global.EPSILON)
+                        if (toappend.Count > 0)
                         {
-                            cap = 0;
+                            appendedrequests.AddRange(toappend.GetList());
+                            Console.WriteLine($"WEEK_PLAN: {toappend.GetFirst().WEEK_PLAN} Allocati: {appendedrequests.Count}");
+                            toappend.Purge();
                         }
-                        if (tocomplete.Count > 0)
-                        {
-                            foreach (var el in tocomplete.GetList())
-                            {
-                                weekrecords.RemoveElement(el);
-                            }
-                            completedrequests.AddRange(tocomplete.GetList());
-                            Console.WriteLine($"WEEK_PLAN: {tocomplete.GetFirst().WEEK_PLAN} Completati: {completedrequests.Count}, Rimanenti: {llw.Count}");
-                        }
-                        // aggiorna tutti i record nella week (che sono rimati alla allocazione totale)
-                        llw.Where(r => (int)r.Priority == rec.priority).ToList().ForEach(l =>
-                                                                                         {
-                                                                                             l.Allocated = Math.Round(allocated, Global.ROUNDDIGITS);
-                                                                                         });
                     }
-                    // alla fine uniforma tutti i record della week (che sono rimasti) alla medesima Capacity
-                    llw.ForEach(l => l.Capacity = cap);
+                    // alla fine uniforma tutti i record della week alla medesima Capacity
+                    // e alla medesima allocazione
+                    llw.ForEach(l =>
+                    {
+                        l.Capacity = Math.Round(cap, Global.ROUNDDIGITS);
+                        l.Allocated = Math.Round(allocated, Global.ROUNDDIGITS);
+                    });
                 }
             }
             catch (TraceException e)
@@ -711,13 +712,13 @@ namespace LoadL.CalcExtendedLogics
         /// </summary>
         /// <param name="waiting"></param>
         /// <param name="weekrecords"></param>
-        /// <param name="completedrequests"></param>
-        private void ElabWaitingRequests(IList<LoadLevellingWork> waiting, ElementsList weekrecords, ElementsList completedrequests)
+        /// <param name="appendedrequests"></param>
+        private void ElabWaitingRequests(IList<LoadLevellingWork> waiting, ElementsList weekrecords, ElementsList appendedrequests)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
-                using (ElementsList tocomplete = new ElementsList())
+                using (ElementsList toappend = new ElementsList())
                 {
 
                     List<LoadLevellingWork> llw = weekrecords.GetList();
@@ -756,80 +757,83 @@ namespace LoadL.CalcExtendedLogics
                                         // in questo caso tutto il richiesto viene allocato
                                         cap -= w.Required;
                                         allocated += w.Required;
-                                        el.TCH_WEEK = w.WEEK_PLAN;
-                                        el.Allocated = Math.Round(w.Required, Global.ROUNDDIGITS);
-                                        w.Required = 0; // la richiesta e' stata soddisfatta
-                                        // con Required == 0 bisogna toglierlo da qui
-                                        tocomplete.AddElement(el);
-                                    }
-                                    else
-                                    {
-                                        // in questo caso il richiesto deve essere allocato in 
-                                        // quantita' proporzionale a ciascuna richiesta
-                                        var toallocate = initialcap * w.Required / totreq;
-                                        if (toallocate > Global.EPSILON)
-                                        {
 
-                                            //throw new TraceException(fname, $"Quantità da allocare inconsistente: {toallocate}");
-                                            if (toallocate <= cap)
+                                        LoadLevellingWork newel = el.Clone();
+                                        newel.TCH_WEEK = w.WEEK_PLAN;
+                                        newel.Allocated = Math.Round(w.Required, Global.ROUNDDIGITS);
+                                        newel.Required = newel.Allocated; // se required == allocated allora la richiesta risulta soddisfatta 
+
+                                        w.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
+                                        toappend.AddElement(newel);
+                                        break; // passa all'elemento successivo nella lista todo
+                                    }
+                                    // in questo caso il richiesto deve essere allocato in 
+                                    // quantita' proporzionale a ciascuna richiesta
+                                    var toallocate = initialcap * w.Required / totreq;
+                                    if (toallocate > Global.EPSILON)
+                                    {
+                                        //throw new TraceException(fname, $"Quantità da allocare inconsistente: {toallocate}");
+                                        if (toallocate <= cap)
+                                        {
+                                            cap -= toallocate;
+                                            w.Required -= toallocate;
+                                            // Test
+                                            if (w.Required < 0)
+                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                            allocated += toallocate;
+
+                                            LoadLevellingWork newel = el.Clone();
+                                            newel.TCH_WEEK = w.WEEK_PLAN;
+                                            newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
+                                            newel.Required = w.Required;
+                                            newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
+                                            toappend.AddElement(newel);
+
+                                            if (Math.Abs(w.Required) < Global.EPSILON)
                                             {
-                                                cap -= toallocate;
-                                                w.Required -= toallocate;
-                                                // Test
-                                                if (w.Required < 0)
-                                                    throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                                allocated += toallocate;
-                                                el.TCH_WEEK = w.WEEK_PLAN;
-                                                el.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
-                                                // con Required == 0 bisogna toglierlo da qui
-                                                if (Math.Abs(w.Required) < Global.EPSILON)
-                                                {
-                                                    w.Required = 0; // la richiesta e' stata soddisfatta
-                                                    tocomplete.AddElement(el);
-                                                }
+                                                w.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
+                                                break; // passa all'elemento successivo nella lista todo
                                             }
-                                            else
+                                        }
+                                        else
+                                        {
+                                            w.Required -= cap;
+                                            // Test
+                                            if (w.Required < 0)
+                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                            allocated += cap;
+                                            cap = 0;
+                                                
+                                            LoadLevellingWork newel = el.Clone();
+                                            newel.TCH_WEEK = w.WEEK_PLAN;
+                                            newel.Allocated = el.Allocated;
+                                            newel.Required = w.Required;
+                                            newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
+                                            toappend.AddElement(newel);
+
+                                            if (Math.Abs(el.Required) < Global.EPSILON)
                                             {
-                                                w.Required -= cap;
-                                                // Test
-                                                if (w.Required < 0)
-                                                    throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                                // TODO se arriva a required == 0, bisogna toglierlo da qui
-                                                allocated += cap;
-                                                el.Allocated = Math.Round(cap, Global.ROUNDDIGITS);
-                                                cap = 0;
-                                                el.TCH_WEEK = w.WEEK_PLAN;
-                                                if (Math.Abs(el.Required) < Global.EPSILON)
-                                                {
-                                                    w.Required = 0; // la richiesta e' stata soddisfatta
-                                                    tocomplete.AddElement(el);
-                                                }
+                                                w.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
+                                                break; // passa all'elemento successivo nella lista todo
                                             }
                                         }
                                     }
                                 }
                             }
-                            if (Math.Abs(cap) < Global.EPSILON)
+                            if (toappend.Count > 0)
                             {
-                                cap = 0;
+                                appendedrequests.AddRange(toappend.GetList());
+                                Console.WriteLine($"WEEK_PLAN: {toappend.GetFirst().WEEK_PLAN} Allocati: {appendedrequests.Count}");
+                                toappend.Purge();
                             }
-                            if (tocomplete.Count > 0)
-                            {
-                                foreach (var el in tocomplete.GetList())
-                                {
-                                    weekrecords.RemoveElement(el);
-                                }
-                                completedrequests.AddRange(tocomplete.GetList());
-                                Console.WriteLine($"WEEK_PLAN: {tocomplete.GetFirst().WEEK_PLAN} Completati: {completedrequests.Count}, Rimanenti: {llw.Count}");
-                            }
-                            // aggiorna tutti i record nella week (che sono rimati alla allocazione totale)
-                            llw.Where(r => (int)r.Priority == rec.priority).ToList().ForEach(l =>
-                            {
-                                l.Allocated = Math.Round(allocated, Global.ROUNDDIGITS);
-                            });
                         }
-                        // alla fine uniforma tutti i record della week (che sono rimasti) alla medesima Capacity
-                        llw.ForEach(l => l.Capacity = cap);
+                        // alla fine uniforma tutti i record della week alla medesima Capacity
+                        // e alla medesima allocazione
+                        llw.ForEach(l =>
+                        {
+                            l.Capacity = Math.Round(cap, Global.ROUNDDIGITS);
+                            l.Allocated = Math.Round(allocated, Global.ROUNDDIGITS);
+                        });
                         var todelete = todo.Where(w => Math.Abs(w.Required) < Global.EPSILON).Select(r => r).ToList();
                         foreach (var w in todelete)
                         {
@@ -856,24 +860,23 @@ namespace LoadL.CalcExtendedLogics
         /// <param name="moveuprequests">Lista contenente tutti i record che virtualmente possono essere elaborati, 
         /// relativi alle settimane successive rispetto a quella rappresentata da weekrecords</param>
         /// <param name="weekrecords">Contiene i record relativi alla settimana corrente</param>
-        /// <param name="completedrequests">Contiene i record relativi alle rischieste che sono state completate</param>
-        private void ElabAheadRequests(IList<LoadLevellingWork> moveuprequests, ElementsList weekrecords, ElementsList completedrequests)
+        /// <param name="appendedrequests">Contiene i record relativi alle rischieste che sono state completate</param>
+        private void ElabAheadRequests(IList<LoadLevellingWork> moveuprequests, ElementsList weekrecords, ElementsList appendedrequests)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
-                using (ElementsList tocomplete = new ElementsList())
+                using (ElementsList toappend = new ElementsList())
                 {
-
                     List<LoadLevellingWork> llw = weekrecords.GetList();
                     // la ricerca viene eseguita in ordine di priorità dei record che richiedono
                     // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
                     // a priorità più elevata.
                     var priorities = (from rec in moveuprequests
-                        group rec by new { rec.WEEK_PLAN, rec.Priority }
-                        into g
-                        orderby g.Key.WEEK_PLAN, g.Key.Priority, g.Count()
-                        select new { week = g.Key.WEEK_PLAN, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
+                                      group rec by new { rec.WEEK_PLAN, rec.Priority }
+                                      into g
+                                      orderby g.Key.WEEK_PLAN, g.Key.Priority, g.Count()
+                                      select new { week = g.Key.WEEK_PLAN, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
                     // Le richieste devono essere soddisfatte raggruppandole per priorità.
                     // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
                     // la percentuale reciproca delle richieste
@@ -889,7 +892,7 @@ namespace LoadL.CalcExtendedLogics
                                     (int)r.Priority == rec.priority
                                     select r).ToList();
                         double totreq = moveuprequests.Where(r => (int)r.Priority == rec.priority && r.WEEK_PLAN == rec.week).Sum(t => t.Required);
-                        foreach (var w in todo)
+                        foreach (var h in todo)
                         {
                             foreach (var el in llw)
                             {
@@ -898,82 +901,85 @@ namespace LoadL.CalcExtendedLogics
                                     if (totreq < initialcap)
                                     {
                                         // in questo caso tutto il richiesto viene allocato
-                                        cap -= w.Required;
-                                        allocated += w.Required;
-                                        el.TCH_WEEK = w.WEEK_PLAN;
-                                        el.Allocated = Math.Round(w.Required, Global.ROUNDDIGITS);
-                                        w.Required = 0; // la richiesta e' stata soddisfatta
-                                        // con Required == 0 bisogna toglierlo da qui
-                                        tocomplete.AddElement(el);
-                                    }
-                                    else
-                                    {
-                                        // in questo caso il richiesto deve essere allocato in 
-                                        // quantita' proporzionale a ciascuna richiesta
-                                        var toallocate = initialcap * w.Required / totreq;
-                                        if (toallocate > Global.EPSILON)
-                                        {
+                                        cap -= h.Required;
+                                        allocated += h.Required;
 
-                                            //throw new TraceException(fname, $"Quantità da allocare inconsistente: {toallocate}");
-                                            if (toallocate <= cap)
+                                        LoadLevellingWork newel = el.Clone();
+                                        newel.TCH_WEEK = h.WEEK_PLAN;
+                                        newel.Allocated = Math.Round(h.Required, Global.ROUNDDIGITS);
+                                        newel.Required = newel.Allocated; // se required == allocated allora la richiesta risulta soddisfatta 
+
+                                        h.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
+                                        toappend.AddElement(el);
+                                        break; // passa all'elemento successivo nella lista todo
+                                    }
+                                    // in questo caso il richiesto deve essere allocato in 
+                                    // quantita' proporzionale a ciascuna richiesta
+                                    var toallocate = initialcap * h.Required / totreq;
+                                    if (toallocate > Global.EPSILON)
+                                    {
+                                        //throw new TraceException(fname, $"Quantità da allocare inconsistente: {toallocate}");
+                                        if (toallocate <= cap)
+                                        {
+                                            cap -= toallocate;
+                                            h.Required -= toallocate;
+                                            // Test
+                                            if (h.Required < 0)
+                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+
+                                            LoadLevellingWork newel = el.Clone();
+                                            newel.TCH_WEEK = h.WEEK_PLAN;
+                                            newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
+                                            newel.Required = h.Required;
+                                            newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
+                                            toappend.AddElement(newel);
+
+                                            if (Math.Abs(h.Required) < Global.EPSILON)
                                             {
-                                                cap -= toallocate;
-                                                w.Required -= toallocate;
-                                                // Test
-                                                if (w.Required < 0)
-                                                    throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                                allocated += toallocate;
-                                                el.TCH_WEEK = w.WEEK_PLAN;
-                                                el.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
-                                                // con Required == 0 bisogna toglierlo da qui
-                                                if (Math.Abs(w.Required) < Global.EPSILON)
-                                                {
-                                                    w.Required = 0; // la richiesta e' stata soddisfatta
-                                                    tocomplete.AddElement(el);
-                                                }
+                                                h.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
+                                                break; // passa all'elemento successivo nella lista todo
                                             }
-                                            else
+                                        }
+                                        else
+                                        {
+                                            h.Required -= cap;
+                                            // Test
+                                            if (h.Required < 0)
+                                                throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
+                                            allocated += cap;
+                                            cap = 0;
+
+                                            LoadLevellingWork newel = el.Clone();
+                                            newel.TCH_WEEK = h.WEEK_PLAN;
+                                            newel.Allocated = el.Allocated;
+                                            newel.Required = h.Required;
+                                            newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
+                                            toappend.AddElement(newel);
+
+                                            if (Math.Abs(el.Required) < Global.EPSILON)
                                             {
-                                                w.Required -= cap;
-                                                // Test
-                                                if (w.Required < 0)
-                                                    throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
-                                                // TODO se arriva a required == 0, bisogna toglierlo da qui
-                                                allocated += cap;
-                                                el.Allocated = Math.Round(cap, Global.ROUNDDIGITS);
-                                                cap = 0;
-                                                el.TCH_WEEK = w.WEEK_PLAN;
-                                                if (Math.Abs(el.Required) < Global.EPSILON)
-                                                {
-                                                    w.Required = 0; // la richiesta e' stata soddisfatta
-                                                    tocomplete.AddElement(el);
-                                                }
+                                                h.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
+                                                break; // passa all'elemento successivo nella lista todo
                                             }
                                         }
                                     }
                                 }
                             }
-                            if (Math.Abs(cap) < Global.EPSILON)
+                            if (toappend.Count > 0)
                             {
-                                cap = 0;
+                                appendedrequests.AddRange(toappend.GetList());
+                                Console.WriteLine($"WEEK_PLAN: {toappend.GetFirst().WEEK_PLAN} Allocati: {appendedrequests.Count}");
+                                toappend.Purge();
                             }
-                            if (tocomplete.Count > 0)
-                            {
-                                foreach (var el in tocomplete.GetList())
-                                {
-                                    weekrecords.RemoveElement(el);
-                                }
-                                completedrequests.AddRange(tocomplete.GetList());
-                                Console.WriteLine($"WEEK_PLAN: {tocomplete.GetFirst().WEEK_PLAN} Completati: {completedrequests.Count}, Rimanenti: {llw.Count}");
-                            }
-                            // aggiorna tutti i record nella week (che sono rimati alla allocazione totale)
-                            llw.Where(r => (int)r.Priority == rec.priority).ToList().ForEach(l =>
-                            {
-                                l.Allocated = Math.Round(allocated, Global.ROUNDDIGITS);
-                            });
+                            
                         }
-                        // alla fine uniforma tutti i record della week (che sono rimasti) alla medesima Capacity
-                        llw.ForEach(l => l.Capacity = cap);
+                        // alla fine uniforma tutti i record della week alla medesima Capacity
+                        // e alla medesima allocazione
+                        llw.ForEach(l =>
+                        {
+                            l.Capacity = Math.Round(cap, Global.ROUNDDIGITS);
+                            l.Allocated = Math.Round(allocated, Global.ROUNDDIGITS);
+                        });
                         var todelete = todo.Where(w => Math.Abs(w.Required) < Global.EPSILON).Select(r => r).ToList();
                         foreach (var w in todelete)
                         {

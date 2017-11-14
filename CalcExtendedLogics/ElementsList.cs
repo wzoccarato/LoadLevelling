@@ -37,7 +37,9 @@ namespace LoadL.CalcExtendedLogics
             try
             {
                 // Test di consistenza
-                var invalid = (from rec in _list where rec.Id == newelement.Id select rec).Any();
+                var invalid = (from rec in _list
+                               where rec.Id != null && rec.Id == newelement.Id
+                               select rec).Any();
                 if (invalid)
                     throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
                 _list.Add(newelement);
@@ -63,8 +65,13 @@ namespace LoadL.CalcExtendedLogics
                 {
                     _list.Add(el);
                 }
-                // Test di consistenza
-                var invalid = (from rec in _list group rec by rec.Id into g orderby g.Key, g.Count() select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count>1);
+                // Test di consistenza un gli id == null li permetto, perche' sono gli elementi nuovi 
+                // inseriti in lista in append
+                var invalid = (from rec in _list
+                               where rec.Id != null
+                               group rec by rec.Id into g
+                               orderby g.Key, g.Count()
+                               select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count>1);
                 if (invalid)
                     throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
 
@@ -92,7 +99,11 @@ namespace LoadL.CalcExtendedLogics
                     _list.Add(rec);
                 }
                 // Test di consistenza
-                var invalid = (from rec in _list group rec by rec.Id into g orderby g.Key, g.Count() select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count > 1);
+                var invalid = (from rec in _list
+                               where rec != null
+                               group rec by rec.Id into g
+                               orderby g.Key, g.Count()
+                               select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count > 1);
                 if (invalid)
                     throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
             }
