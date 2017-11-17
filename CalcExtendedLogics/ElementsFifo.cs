@@ -5,9 +5,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using LoadL.DataLayer.DbTables;
+using CalcExtendedLogics.DataLayer.DbTables;
 
-namespace LoadL.CalcExtendedLogics
+namespace CalcExtendedLogics
 {
     public class ElementsFifo
     {

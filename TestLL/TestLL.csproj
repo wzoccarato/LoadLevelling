@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{5E689B09-9F41-42AC-9C46-FB80AA81B598}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>LoadL.TestLL</RootNamespace>
+    <RootNamespace>CalcExtendedLogics.TestLL</RootNamespace>
     <AssemblyName>TestLL</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

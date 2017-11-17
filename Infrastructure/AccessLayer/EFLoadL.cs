@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Data.Entity;
-using System.Data.Entity.Core.EntityClient;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
-using AutoMapper.XpressionMapper.Extensions;
-using LoadL.DataLayer.DbTables;
-using LoadL.Infrastructure.Abstract;
+using CalcExtendedLogics.DataLayer.DbTables;
+using CalcExtendedLogics.Infrastructure.Abstract;
 
-namespace LoadL.Infrastructure.AccessLayer
+namespace CalcExtendedLogics.Infrastructure.AccessLayer
 {
     public class EfLoadL : IDbQuery, IDisposable
     {

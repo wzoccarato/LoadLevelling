@@ -1,14 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.Common;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using AutoMapper;
-using LoadL.Infrastructure.Abstract;
-using LoadL.Infrastructure.AccessLayer;
-using LoadL.DataLayer;
-using LoadL.DataLayer.DbTables;
+using CalcExtendedLogics.Infrastructure.Abstract;
+using CalcExtendedLogics.Infrastructure.AccessLayer;
+
 
 namespace LoadL.loadDatabase
 {

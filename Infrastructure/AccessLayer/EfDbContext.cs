@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LoadL.DataLayer.DbTables;
+﻿using System.Data.Entity;
+using CalcExtendedLogics.DataLayer.DbTables;
 
-namespace LoadL.Infrastructure.AccessLayer
+namespace CalcExtendedLogics.Infrastructure.AccessLayer
 {
     class EFDbContext : DbContext
     {

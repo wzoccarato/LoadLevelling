@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using LoadL.DataLayer.DbTables;
-using LoadL.Infrastructure.Abstract;
+using CalcExtendedLogics.DataLayer.DbTables;
+using CalcExtendedLogics.Infrastructure.Abstract;
 
-namespace LoadL.CalcExtendedLogics
+namespace CalcExtendedLogics.CalcExtendedLogics
 {
     public class LlWrapperClass : ILoadLevelling
     {

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LoadL.DataLayer.DbTables
+namespace CalcExtendedLogics.DataLayer.DbTables
 {
     // identica alla classe LoadLevelling, ma utilizzata per l'elaborazione interna
     // i nomi dei campi variabili sono parlanti, in modo da semplificare la

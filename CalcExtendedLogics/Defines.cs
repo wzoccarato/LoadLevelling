@@ -2,7 +2,7 @@
 using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 
-namespace LoadL.CalcExtendedLogics
+namespace CalcExtendedLogics
 {
     // posizione in tabella loadlevelling degli heading
     // che possono cambiare nome

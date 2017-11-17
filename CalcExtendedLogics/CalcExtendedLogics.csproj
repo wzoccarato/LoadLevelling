@@ -7,7 +7,7 @@
     <ProjectGuid>{DA9F66A2-C73D-42D8-BEA5-7CD09BB49700}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LoadL.CalcExtendedLogics</RootNamespace>
+    <RootNamespace>CalcExtendedLogics</RootNamespace>
     <AssemblyName>CalcEXLogics</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

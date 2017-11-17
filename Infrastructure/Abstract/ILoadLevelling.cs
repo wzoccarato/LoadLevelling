@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LoadL.DataLayer.DbTables;
+﻿using System.Collections.Generic;
+using CalcExtendedLogics.DataLayer.DbTables;
 
-namespace LoadL.Infrastructure.Abstract
+namespace CalcExtendedLogics.Infrastructure.Abstract
 {
     // interfaccia per la implementazione delle query di base
     public interface ILoadLevelling

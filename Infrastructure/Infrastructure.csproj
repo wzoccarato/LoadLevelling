@@ -7,7 +7,7 @@
     <ProjectGuid>{6DCDDACC-B95E-4A2D-BB93-5F798E8E6F1F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LoadL.Infrastructure</RootNamespace>
+    <RootNamespace>CalcExtendedLogics.Infrastructure</RootNamespace>
     <AssemblyName>Infrastructure</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

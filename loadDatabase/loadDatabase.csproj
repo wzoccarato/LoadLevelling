@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{96D09424-7039-4CAB-8D0E-3D7DF81EE66A}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>LoadL.loadDatabase</RootNamespace>
+    <RootNamespace>CalcExtendedLogics.loadDatabase</RootNamespace>
     <AssemblyName>loadDatabase</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

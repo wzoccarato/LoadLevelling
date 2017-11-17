@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data.Entity;
+﻿using System.Data.Entity;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using LoadL.DataLayer.DbTables;
+using CalcExtendedLogics.DataLayer.DbTables;
 
-namespace LoadL.Infrastructure.Abstract
+namespace CalcExtendedLogics.Infrastructure.Abstract
 {
     // deriva dalla interfaccia ILoadLevelling, 
     // aggiunge i metodi necessari per l'accesso al database 

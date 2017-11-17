@@ -3,17 +3,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
-using System.Net.Sockets;
 using System.Reflection;
-using LoadL.DataLayer.DbTables;
-using LoadL.Infrastructure;
-using LoadL.Infrastructure.Abstract;
-using static LoadL.CalcExtendedLogics.Helper;
+using CalcExtendedLogics.CalcExtendedLogics;
+using CalcExtendedLogics.DataLayer.DbTables;
+using CalcExtendedLogics.Infrastructure;
+using CalcExtendedLogics.Infrastructure.Abstract;
 
-
-namespace LoadL.CalcExtendedLogics
+namespace CalcExtendedLogics
 {
-    public class CalcExLogicClass
+    public class CalcEXlogicClass
     {
         //private IList<LoadLevellingWork> _loadLevelling;
         private IList<Schema> _schema;                  // lista contenente la conversione della DataTable Schema
@@ -26,7 +24,7 @@ namespace LoadL.CalcExtendedLogics
 
         #region ctor
 
-        public CalcExLogicClass()
+        public CalcEXlogicClass()
         {
             // qui le inizializzazioni
 
@@ -60,20 +58,21 @@ namespace LoadL.CalcExtendedLogics
         #endregion
 
         #region metodi pubblici
-        public bool Execute(DataSet dataset, string requiredoperation, string targetdatatablename)
+        public static bool Execute(DataSet dataset, string requiredoperation, string targetdatatablename)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
+                CalcEXlogicClass cexlc = new CalcEXlogicClass();
                 switch (requiredoperation)
                 {
                     case "loadl":
                         var targetdt = dataset.Tables[targetdatatablename];
                         var schemadt = dataset.Tables["Schema"];    // il nome della tabella bisognera' passarlo in argomento
 
-                        Initialize(targetdt, schemadt);
+                        cexlc.Initialize(targetdt, schemadt);
 
-                        var allocatedElements = OptimizeWorkload();
+                        var allocatedElements = cexlc.OptimizeWorkload();
 
                         foreach (var el in allocatedElements.GetList())
                         {
@@ -139,48 +138,48 @@ namespace LoadL.CalcExtendedLogics
                 _schema = ConvertDataTable<Schema>(schemadt);
 
                 // acquisisce i valori degli heading dalla tabella schema
-                var f1 = _schema.Where(x => x.BlockId == Alias[LlAlias.F1]).Select(r => r.Heading).First();
-                var f2 = _schema.Where(x => x.BlockId == Alias[LlAlias.F2]).Select(r => r.Heading).First();
-                var f3 = _schema.Where(x => x.BlockId == Alias[LlAlias.F3]).Select(r => r.Heading).First();
-                var ahead = _schema.Where(x => x.BlockId == Alias[LlAlias.Ahead]).Select(r => r.Heading).First();
-                var late = _schema.Where(x => x.BlockId == Alias[LlAlias.Late]).Select(r => r.Heading).First();
-                var priority = _schema.Where(x => x.BlockId == Alias[LlAlias.Priority]).Select(r => r.Heading).First();
-                var capacity = _schema.Where(x => x.BlockId == Alias[LlAlias.Capacity]).Select(r => r.Heading).First();
-                var required = _schema.Where(x => x.BlockId == Alias[LlAlias.Required]).Select(r => r.Heading).First();
-                var planBu = _schema.Where(x => x.BlockId == Alias[LlAlias.PlanBu]).Select(r => r.Heading).First();
-                var flagHr = _schema.Where(x => x.BlockId == Alias[LlAlias.FlagHr]).Select(r => r.Heading).First();
-                var allocated = _schema.Where(x => x.BlockId == Alias[LlAlias.Allocated]).Select(r => r.Heading).First();
+                var f1 = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.F1]).Select(r => r.Heading).First();
+                var f2 = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.F2]).Select(r => r.Heading).First();
+                var f3 = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.F3]).Select(r => r.Heading).First();
+                var ahead = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Ahead]).Select(r => r.Heading).First();
+                var late = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Late]).Select(r => r.Heading).First();
+                var priority = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Priority]).Select(r => r.Heading).First();
+                var capacity = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Capacity]).Select(r => r.Heading).First();
+                var required = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Required]).Select(r => r.Heading).First();
+                var planBu = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.PlanBu]).Select(r => r.Heading).First();
+                var flagHr = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.FlagHr]).Select(r => r.Heading).First();
+                var allocated = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Allocated]).Select(r => r.Heading).First();
 
                 // questo trascodifica dagli heading della tabella passata in argomento, agli 
                 // heading utilizzati internamente, per semplicita' di gestione e anche 
                 // leggibilit' del codice
                 Dictionary<string, string> remap = new Dictionary<string, string>()
                                                    {
-                                                       {loadlevellingdt.Columns[Index["a"]].ColumnName, "F1"},
-                                                       {loadlevellingdt.Columns[Index["b"]].ColumnName, "F2"},
-                                                       {loadlevellingdt.Columns[Index["c"]].ColumnName, "F3"},
-                                                       {loadlevellingdt.Columns[Index["d"]].ColumnName, "Ahead"},
-                                                       {loadlevellingdt.Columns[Index["e"]].ColumnName, "Late"},
-                                                       {loadlevellingdt.Columns[Index["f"]].ColumnName, "Priority"},
-                                                       {loadlevellingdt.Columns[Index["g"]].ColumnName, "Capacity"},
-                                                       {loadlevellingdt.Columns[Index["h"]].ColumnName, "Required"},
-                                                       {loadlevellingdt.Columns[Index["i"]].ColumnName, "PLAN_BU"},
-                                                       {loadlevellingdt.Columns[Index["j"]].ColumnName, "FLAG_HR"},
-                                                       {loadlevellingdt.Columns[Index["k"]].ColumnName, "Allocated"}
+                                                       {loadlevellingdt.Columns[Helper.Index["a"]].ColumnName, "F1"},
+                                                       {loadlevellingdt.Columns[Helper.Index["b"]].ColumnName, "F2"},
+                                                       {loadlevellingdt.Columns[Helper.Index["c"]].ColumnName, "F3"},
+                                                       {loadlevellingdt.Columns[Helper.Index["d"]].ColumnName, "Ahead"},
+                                                       {loadlevellingdt.Columns[Helper.Index["e"]].ColumnName, "Late"},
+                                                       {loadlevellingdt.Columns[Helper.Index["f"]].ColumnName, "Priority"},
+                                                       {loadlevellingdt.Columns[Helper.Index["g"]].ColumnName, "Capacity"},
+                                                       {loadlevellingdt.Columns[Helper.Index["h"]].ColumnName, "Required"},
+                                                       {loadlevellingdt.Columns[Helper.Index["i"]].ColumnName, "PLAN_BU"},
+                                                       {loadlevellingdt.Columns[Helper.Index["j"]].ColumnName, "FLAG_HR"},
+                                                       {loadlevellingdt.Columns[Helper.Index["k"]].ColumnName, "Allocated"}
                                                    };
 
                 // assegna gli heading, come definiti sopra
-                loadlevellingdt.Columns[Index["a"]].ColumnName = remap[loadlevellingdt.Columns[Index["a"]].ColumnName];
-                loadlevellingdt.Columns[Index["b"]].ColumnName = remap[loadlevellingdt.Columns[Index["b"]].ColumnName];
-                loadlevellingdt.Columns[Index["c"]].ColumnName = remap[loadlevellingdt.Columns[Index["c"]].ColumnName];
-                loadlevellingdt.Columns[Index["d"]].ColumnName = remap[loadlevellingdt.Columns[Index["d"]].ColumnName];
-                loadlevellingdt.Columns[Index["e"]].ColumnName = remap[loadlevellingdt.Columns[Index["e"]].ColumnName];
-                loadlevellingdt.Columns[Index["f"]].ColumnName = remap[loadlevellingdt.Columns[Index["f"]].ColumnName];
-                loadlevellingdt.Columns[Index["g"]].ColumnName = remap[loadlevellingdt.Columns[Index["g"]].ColumnName];
-                loadlevellingdt.Columns[Index["h"]].ColumnName = remap[loadlevellingdt.Columns[Index["h"]].ColumnName];
-                loadlevellingdt.Columns[Index["i"]].ColumnName = remap[loadlevellingdt.Columns[Index["i"]].ColumnName];
-                loadlevellingdt.Columns[Index["j"]].ColumnName = remap[loadlevellingdt.Columns[Index["j"]].ColumnName];
-                loadlevellingdt.Columns[Index["k"]].ColumnName = remap[loadlevellingdt.Columns[Index["k"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["a"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["a"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["b"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["b"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["c"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["c"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["d"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["d"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["e"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["e"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["f"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["f"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["g"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["g"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["h"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["h"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["i"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["i"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["j"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["j"]].ColumnName];
+                loadlevellingdt.Columns[Helper.Index["k"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["k"]].ColumnName];
 
                 // converte la tabella in List. Questa e' la copia di lavoro interna 
                 // della tabella
@@ -189,17 +188,17 @@ namespace LoadL.CalcExtendedLogics
 
                 // assegna alla tabella originale gli heading definitivi,
                 // quelli ricavati dalla tabella Schema
-                loadlevellingdt.Columns[Index["a"]].ColumnName = f1;
-                loadlevellingdt.Columns[Index["b"]].ColumnName = f2;
-                loadlevellingdt.Columns[Index["c"]].ColumnName = f3;
-                loadlevellingdt.Columns[Index["d"]].ColumnName = ahead;
-                loadlevellingdt.Columns[Index["e"]].ColumnName = late;
-                loadlevellingdt.Columns[Index["f"]].ColumnName = priority;
-                loadlevellingdt.Columns[Index["g"]].ColumnName = capacity;
-                loadlevellingdt.Columns[Index["h"]].ColumnName = required;
-                loadlevellingdt.Columns[Index["i"]].ColumnName = planBu;
-                loadlevellingdt.Columns[Index["j"]].ColumnName = flagHr;
-                loadlevellingdt.Columns[Index["k"]].ColumnName = allocated;
+                loadlevellingdt.Columns[Helper.Index["a"]].ColumnName = f1;
+                loadlevellingdt.Columns[Helper.Index["b"]].ColumnName = f2;
+                loadlevellingdt.Columns[Helper.Index["c"]].ColumnName = f3;
+                loadlevellingdt.Columns[Helper.Index["d"]].ColumnName = ahead;
+                loadlevellingdt.Columns[Helper.Index["e"]].ColumnName = late;
+                loadlevellingdt.Columns[Helper.Index["f"]].ColumnName = priority;
+                loadlevellingdt.Columns[Helper.Index["g"]].ColumnName = capacity;
+                loadlevellingdt.Columns[Helper.Index["h"]].ColumnName = required;
+                loadlevellingdt.Columns[Helper.Index["i"]].ColumnName = planBu;
+                loadlevellingdt.Columns[Helper.Index["j"]].ColumnName = flagHr;
+                loadlevellingdt.Columns[Helper.Index["k"]].ColumnName = allocated;
             }
             catch (TraceException e)
             {
@@ -393,7 +392,6 @@ namespace LoadL.CalcExtendedLogics
                             {
                                 IList<LoadLevellingWork> moveup = GetAheadRequests(toelaborate.GetFirst().WEEK_PLAN, (int)toelaborate.GetFirst().Ahead,sortedweeks);
                                 ElabAheadRequests(moveup, toelaborate, appendedelements);
-                                // TODO continua da qui
                             }
                             else
                             {
@@ -498,7 +496,7 @@ namespace LoadL.CalcExtendedLogics
                         if (wk - late <= 0)
                         {
                             --year;
-                            newwk = GetWeeksInYear(year) + wk - late;
+                            newwk = Helper.GetWeeksInYear(year) + wk - late;
                         }
                         else
                         {
@@ -547,8 +545,8 @@ namespace LoadL.CalcExtendedLogics
                     int val = 1;
                     do
                     {
-                        int newwk = 0;
-                        var current = GetWeeksInYear(year);
+                        int newwk;
+                        var current = Helper.GetWeeksInYear(year);
                         if (wk + val >= current)
                         {
                             ++year;
@@ -623,7 +621,7 @@ namespace LoadL.CalcExtendedLogics
 
                                     el.Required = 0; // la richiesta e' stata soddisfatta
                                     toappend.AddElement(newel);
-                                    break; // passa all'elemento successivo nella lista todo
+                                    break; // passa all'elemento successivo nella lista
                                 }
                                 // in questo caso il richiesto deve essere allocato in 
                                 // quantita' proporzionale a ciascuna richiesta
@@ -650,7 +648,7 @@ namespace LoadL.CalcExtendedLogics
                                         if (Math.Abs(el.Required) < Global.EPSILON)
                                         {
                                             el.Required = 0; // la richiesta e' stata soddisfatta
-                                            break; // passa all'elemento successivo nella lista todo
+                                            break; // passa all'elemento successivo nella lista
                                         }
                                     }
                                     else
@@ -672,7 +670,7 @@ namespace LoadL.CalcExtendedLogics
                                         if (Math.Abs(el.Required) < Global.EPSILON)
                                         {
                                             el.Required = 0; // la richiesta e' stata soddisfatta
-                                            break; // passa all'elemento successivo nella lista todo
+                                            break; // passa all'elemento successivo nella lista
                                         }
                                     }
                                 }
@@ -765,7 +763,7 @@ namespace LoadL.CalcExtendedLogics
 
                                         w.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
                                         toappend.AddElement(newel);
-                                        break; // passa all'elemento successivo nella lista todo
+                                        break; // passa all'elemento successivo nella lista
                                     }
                                     // in questo caso il richiesto deve essere allocato in 
                                     // quantita' proporzionale a ciascuna richiesta
@@ -792,7 +790,7 @@ namespace LoadL.CalcExtendedLogics
                                             if (Math.Abs(w.Required) < Global.EPSILON)
                                             {
                                                 w.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
-                                                break; // passa all'elemento successivo nella lista todo
+                                                break; // passa all'elemento successivo nella lista
                                             }
                                         }
                                         else
@@ -814,7 +812,7 @@ namespace LoadL.CalcExtendedLogics
                                             if (Math.Abs(el.Required) < Global.EPSILON)
                                             {
                                                 w.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
-                                                break; // passa all'elemento successivo nella lista todo
+                                                break; // passa all'elemento successivo nella lista
                                             }
                                         }
                                     }
@@ -911,7 +909,7 @@ namespace LoadL.CalcExtendedLogics
 
                                         h.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
                                         toappend.AddElement(el);
-                                        break; // passa all'elemento successivo nella lista todo
+                                        break; // passa all'elemento successivo nella lista
                                     }
                                     // in questo caso il richiesto deve essere allocato in 
                                     // quantita' proporzionale a ciascuna richiesta
@@ -937,7 +935,7 @@ namespace LoadL.CalcExtendedLogics
                                             if (Math.Abs(h.Required) < Global.EPSILON)
                                             {
                                                 h.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
-                                                break; // passa all'elemento successivo nella lista todo
+                                                break; // passa all'elemento successivo nella lista
                                             }
                                         }
                                         else
@@ -959,7 +957,7 @@ namespace LoadL.CalcExtendedLogics
                                             if (Math.Abs(el.Required) < Global.EPSILON)
                                             {
                                                 h.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
-                                                break; // passa all'elemento successivo nella lista todo
+                                                break; // passa all'elemento successivo nella lista
                                             }
                                         }
                                     }
@@ -1007,8 +1005,6 @@ namespace LoadL.CalcExtendedLogics
         /// e' leggermente meno performante della funazione
         /// ConvertDataTable. Per cui nel programma utilizzo la seconda
         /// </summary>
-        /// <param name="dt"></param>
-        /// <returns></returns>
         //private IList<LoadLevellingWork> MapDataTable(DataTable dt)
         //{
         //    IList<LoadLevellingWork> data = new Collection<LoadLevellingWork>();

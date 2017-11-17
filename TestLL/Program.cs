@@ -2,11 +2,11 @@
 using System.Data;
 using System.Linq;
 using System.Reflection;
-using LoadL.CalcExtendedLogics;
-using LoadL.Infrastructure.Abstract;
-using LoadL.Infrastructure.AccessLayer;
+using CalcExtendedLogics.CalcExtendedLogics;
+using CalcExtendedLogics.Infrastructure.Abstract;
+using CalcExtendedLogics.Infrastructure.AccessLayer;
 
-namespace LoadL.TestLL
+namespace CalcExtendedLogics.TestLL
 {
 
     class Program
@@ -17,8 +17,6 @@ namespace LoadL.TestLL
         {
             ILl = new EfLoadL();
             
-            CalcExLogicClass celc = new CalcExLogicClass();
-
             DataTable dt = LinqToDataTable(ILl.LoadLevellingTable);
             dt.TableName = "LoadLevelling";     // il nome della tabella nel db
             DataTable schema = LinqToDataTable(ILl.SchemaTable);
@@ -28,7 +26,7 @@ namespace LoadL.TestLL
             ds.Tables.Add(dt);
             ds.Tables.Add(schema);
 
-            celc.Execute(ds, "loadl", "LoadLevelling");
+            CalcEXlogicClass.Execute(ds, "loadl", "LoadLevelling");
         }
 
         /// <summary>

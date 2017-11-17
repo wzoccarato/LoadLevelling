@@ -1,23 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http.Headers;
 using System.Reflection;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using LoadL.DataLayer.DbTables;
-using LoadL.Infrastructure;
-using static LoadL.CalcExtendedLogics.Helper;
+using CalcExtendedLogics.DataLayer.DbTables;
+using CalcExtendedLogics.Infrastructure;
+using static CalcExtendedLogics.Helper;
 
-namespace LoadL.CalcExtendedLogics
+namespace CalcExtendedLogics
 {
     public class ElementsList:IDisposable
     {
-        private bool _isDisposed = false;
+        private bool _isDisposed;
 
-        private List<LoadLevellingWork> _list;
+        private readonly List<LoadLevellingWork> _list;
         public ElementsList()
         {
             _list = new List<LoadLevellingWork>();
@@ -41,10 +36,10 @@ namespace LoadL.CalcExtendedLogics
                                where rec.Id != null && rec.Id == newelement.Id
                                select rec).Any();
                 if (invalid)
-                    throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
+                    throw new TraceException(fname, "Rilevata chiave multipla. Oggetto non valido");
                 _list.Add(newelement);
             }
-            catch (TraceException e)
+            catch (TraceException)
             {
                 throw;
             }
@@ -73,10 +68,10 @@ namespace LoadL.CalcExtendedLogics
                                orderby g.Key, g.Count()
                                select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count>1);
                 if (invalid)
-                    throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
+                    throw new TraceException(fname, "Rilevata chiave multipla. Oggetto non valido");
 
             }
-            catch (TraceException e)
+            catch (TraceException)
             {
                 throw;
             }
@@ -105,9 +100,9 @@ namespace LoadL.CalcExtendedLogics
                                orderby g.Key, g.Count()
                                select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count > 1);
                 if (invalid)
-                    throw new TraceException(fname, $"Rilevata chiave multipla. Oggetto non valido");
+                    throw new TraceException(fname, "Rilevata chiave multipla. Oggetto non valido");
             }
-            catch (TraceException e)
+            catch (TraceException)
             {
                 throw;
             }
@@ -147,8 +142,7 @@ namespace LoadL.CalcExtendedLogics
             {
                 if (ValidateWeekFormat(weekplan))
                 {
-                    List<LoadLevellingWork> wklist = new List<LoadLevellingWork>();
-                    wklist = (from rec in _list where rec.WEEK_PLAN == weekplan select rec).ToList();
+                    var wklist = (from rec in _list where rec.WEEK_PLAN == weekplan select rec).ToList();
                     return wklist;
                 }
                 else

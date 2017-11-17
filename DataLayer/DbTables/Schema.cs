@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace LoadL.DataLayer.DbTables
+namespace CalcExtendedLogics.DataLayer.DbTables
 {
     public class Schema
     {
