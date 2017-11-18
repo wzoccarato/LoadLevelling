@@ -36,7 +36,7 @@ namespace CalcExtendedLogics
 
             _planBu = new List<string>();
             _flagHr = new List<string>();
-            
+
 
             _iloadl = new LlWrapperClass(new List<LoadLevellingWork>());
 
@@ -58,11 +58,21 @@ namespace CalcExtendedLogics
         #endregion
 
         #region metodi pubblici
+        /// <summary>
+        /// Entry point
+        /// </summary>
+        /// <param name="dataset"></param>
+        /// <param name="requiredoperation"></param>
+        /// <param name="targetdatatablename"></param>
+        /// <returns></returns>
         public static bool Execute(DataSet dataset, string requiredoperation, string targetdatatablename)
         {
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
+
+                // questo mi serve per poter chiamare medodi non statici dall;interno del
+                // metodo statico necessario per la compatibilita' con Board
                 CalcEXlogicClass cexlc = new CalcEXlogicClass();
                 switch (requiredoperation)
                 {
@@ -303,29 +313,10 @@ namespace CalcExtendedLogics
                                     ElementsList weektoelab = new ElementsList();
                                     weektoelab.AddRange(sortedweeklist.GetByWeek(wte));
 
-                                    //var count = toelaborate.Count(s => s.Capacity > 0);
-                                    //Console.WriteLine($"Count Capacity != 0: {count}");
-                                    //_totcount += count;
-                                    //Console.WriteLine($"TotCount = {_totcount}");
-                                    //Console.WriteLine($"wte = {wte}");
-                                    //Console.WriteLine("Premere un tasto...");
-                                    //Console.ReadKey();
-
-                                    //Console.WriteLine($"record della WEEK {wte} totali da elaborare: {toelaborate.Count}");
-                                    //IList<LoadLevellingWork> toelaborate1 = sortedweeklist.Where(r => r.WEEK_PLAN == wte && r.Required>0).Select(r => r).ToList();
-                                    //Console.WriteLine($"record della WEEK {wte} con \"Required\" diverso da 0: {toelaborate1.Count}");
                                     // elabora la week contenuta nella lista ordinata weektoelab
                                     ElaborateWeek(weektoelab,sortedweeklist,waitList,fulfilledList);
                                     // rimuove da sortedlist i records appena elaborati
-                                    sortedweeklist.RemoveByWeekPlan(wte);
-
-                                    //Console.WriteLine($"prossimo = {toelaborate.ElementAt(0).WEEK_PLAN}");
-                                    //Console.WriteLine("Premere un tasto...");
-                                    //Console.ReadKey();
-                                    //foreach (var rc in toelaborate)
-                                    //{
-                                    //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcategory = {rc.PRODUCTION_CATEGORY}, WEEK_PLAN = {rc.WEEK_PLAN}, Priority = {rc.Priority}");
-                                    //}
+                                    sortedweeklist.RemoveByWeekPlan(wte);    
                                 } while (sortedweeklist.Count > 0);
                             }
                         }
