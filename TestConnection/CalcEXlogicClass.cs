@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace CalcExtendedLogics
 {
-    public class CalcEXlogicClass
+    public class CalcEXlogicClass   
     {
         #region metodi pubblici
         /// <summary>

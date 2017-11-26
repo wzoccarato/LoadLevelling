@@ -10,9 +10,10 @@ namespace CalcExtendedLogics
 {
     public static class Helper
     {
-    
+
         // esegue la mappatura da heading della colonne interni, a Heading delle
         // colonne relative alla dataTable LoadLevelling
+#if LOCALTEST
         public static Dictionary<LlAlias, string> Alias = new Dictionary<LlAlias, string>()
                                                           {
                                                               {LlAlias.F1, "a"},
@@ -27,6 +28,19 @@ namespace CalcExtendedLogics
                                                               {LlAlias.FlagHr,"j"},
                                                               {LlAlias.Allocated,"k"}
                                                           };
+#else
+        public static Dictionary<LlAlias, string> Alias = new Dictionary<LlAlias, string>()
+        {
+            {LlAlias.Ahead, "a"},
+            {LlAlias.Late, "b"},
+            {LlAlias.Priority, "c"},
+            {LlAlias.Capacity, "d"},
+            {LlAlias.Required, "e"},
+            {LlAlias.PlanBu,"f"},
+            {LlAlias.FlagHr,"g"},
+            {LlAlias.Allocated,"h"}
+        };
+#endif
 
 
 
@@ -46,6 +60,19 @@ namespace CalcExtendedLogics
                                                           {"j", (int)LlAlias.FlagHr},
                                                           {"k", (int)LlAlias.Allocated}
                                                       };
+
+
+        // serve per rimappare i nomi dei campi nella tabella schema contenuta sul db passato da Board,
+        // sui nomi dei campi del relativo oggetto mantenuto internamente
+        // la chiave sono i nomi dei campi dell'oggetto mantneuto internamente
+        public static Dictionary<string,string> SchemaMap = new Dictionary<string, string>()
+        {
+            {"Id",""},
+            {"BlockId","Block ID"},
+            {"CubeName","CubeName"},
+            {"Heading","Heading"},
+            {"WriteBack","WriteBack"}
+        };
 
         public static int GetWeeksInYear(int year)
         {

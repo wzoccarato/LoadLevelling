@@ -112,7 +112,9 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
+#if LOCALTEST
                 Console.WriteLine(e.TraceMessage);
+#endif
                 // throw
                 return false;
             }
@@ -123,9 +125,9 @@ namespace CalcExtendedLogics
                 return false;
             }
         }
-        #endregion
+#endregion
 
-        #region metodi privati
+#region metodi privati
 
         /// <summary>
         /// inizializza gli oggetti interni, acquisisce gli heading
@@ -148,9 +150,15 @@ namespace CalcExtendedLogics
                 _schema = ConvertDataTable<Schema>(schemadt);
 
                 // acquisisce i valori degli heading dalla tabella schema
+#if LOCALTEST
                 var f1 = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.F1]).Select(r => r.Heading).First();
                 var f2 = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.F2]).Select(r => r.Heading).First();
                 var f3 = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.F3]).Select(r => r.Heading).First();
+#else
+                var f1 = "F1";
+                var f2 = "F2";
+                var f3 = "F3";
+#endif
                 var ahead = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Ahead]).Select(r => r.Heading).First();
                 var late = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Late]).Select(r => r.Heading).First();
                 var priority = _schema.Where(x => x.BlockId == Helper.Alias[LlAlias.Priority]).Select(r => r.Heading).First();
@@ -162,7 +170,8 @@ namespace CalcExtendedLogics
 
                 // questo trascodifica dagli heading della tabella passata in argomento, agli 
                 // heading utilizzati internamente, per semplicita' di gestione e anche 
-                // leggibilit' del codice
+                // leggibilita' del codice
+#if LOCALTEST
                 Dictionary<string, string> remap = new Dictionary<string, string>()
                                                    {
                                                        {loadlevellingdt.Columns[Helper.Index["a"]].ColumnName, "F1"},
@@ -177,6 +186,39 @@ namespace CalcExtendedLogics
                                                        {loadlevellingdt.Columns[Helper.Index["j"]].ColumnName, "FLAG_HR"},
                                                        {loadlevellingdt.Columns[Helper.Index["k"]].ColumnName, "Allocated"}
                                                    };
+#else
+                loadlevellingdt.Columns["h"].ColumnName = "k";
+                loadlevellingdt.Columns["g"].ColumnName = "j";
+                loadlevellingdt.Columns["f"].ColumnName = "i";
+                loadlevellingdt.Columns["e"].ColumnName = "h";
+                loadlevellingdt.Columns["d"].ColumnName = "g";
+                loadlevellingdt.Columns["c"].ColumnName = "f";
+                loadlevellingdt.Columns["b"].ColumnName = "e";
+                loadlevellingdt.Columns["a"].ColumnName = "d";
+
+
+                DataColumn col = loadlevellingdt.Columns .Add("a");
+                col.SetOrdinal(Helper.Index["a"]);
+                col = loadlevellingdt.Columns.Add("b");
+                col.SetOrdinal(Helper.Index["b"]);
+                col = loadlevellingdt.Columns.Add("c");
+                col.SetOrdinal(Helper.Index["c"]);
+                Dictionary<string, string> remap = new Dictionary<string, string>()
+                {
+                    {loadlevellingdt.Columns[Helper.Index["a"]].ColumnName, "F1"},
+                    {loadlevellingdt.Columns[Helper.Index["b"]].ColumnName, "F2"},
+                    {loadlevellingdt.Columns[Helper.Index["c"]].ColumnName, "F3"},
+                    {loadlevellingdt.Columns[Helper.Index["d"]].ColumnName, "Ahead"},
+                    {loadlevellingdt.Columns[Helper.Index["e"]].ColumnName, "Late"},
+                    {loadlevellingdt.Columns[Helper.Index["f"]].ColumnName, "Priority"},
+                    {loadlevellingdt.Columns[Helper.Index["g"]].ColumnName, "Capacity"},
+                    {loadlevellingdt.Columns[Helper.Index["h"]].ColumnName, "Required"},
+                    {loadlevellingdt.Columns[Helper.Index["i"]].ColumnName, "PLAN_BU"},
+                    {loadlevellingdt.Columns[Helper.Index["j"]].ColumnName, "FLAG_HR"},
+                    {loadlevellingdt.Columns[Helper.Index["k"]].ColumnName, "Allocated"}
+                };
+
+#endif
 
                 // assegna gli heading, come definiti sopra
                 loadlevellingdt.Columns[Helper.Index["a"]].ColumnName = remap[loadlevellingdt.Columns[Helper.Index["a"]].ColumnName];
@@ -1043,12 +1085,25 @@ namespace CalcExtendedLogics
             {
                 foreach (PropertyInfo pro in temp.GetProperties())
                 {
+#if LOCALTEST
                     if (pro.Name == column.ColumnName)
+                    {
                         pro.SetValue(obj, dr[column.ColumnName], null);
+                        break;
+                    }
+#else
+                    // in questo caso disaccoppia i nomi dei campi della
+                    // tabella ricevuta da Board,dai nomi dei campi dell'oggetto
+                    // definito internamente
+                    if (Helper.SchemaMap[pro.Name] != column.ColumnName) continue;
+                    var value = dr[column.ColumnName] is DBNull ? string.Empty : dr[column.ColumnName].ToString();
+                    pro.SetValue(obj, value, null);
+                    break;
+#endif
                 }
             }
             return obj;
         }
-        #endregion
+#endregion
     }
 }
