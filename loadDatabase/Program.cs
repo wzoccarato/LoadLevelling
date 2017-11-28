@@ -29,7 +29,7 @@ namespace LoadL.loadDatabase
         [TCH_WEEK],
         [PLANNING_LEVEL],
         [EVENT],
-        [WEEK_PLAN],
+        [Week],
         [a],[b],[c],
         [d],
         [e],
@@ -117,12 +117,12 @@ namespace LoadL.loadDatabase
                             var rnd = new Random();
                             do
                             {
-                                var wte = lbwp.ElementAt(0).WEEK_PLAN;
+                                var wte = lbwp.ElementAt(0).Week;
 
                                 // estrae dalla lista sortata soltanto i record relativi alla 
                                 // week che deve essere elaborata. Questa lista e' gia' ordinata per 
                                 // priorita' decrescente (crescente in senso numerico).
-                                var toelaborate = lbwp.Where(r => r.WEEK_PLAN == wte).Select(r => r).ToList();
+                                var toelaborate = lbwp.Where(r => r.Week == wte).Select(r => r).ToList();
                            
                                 var ll = toelaborate.Select(r => r.Capacity).Distinct().OrderByDescending(s => s).ToList();
                                 if (ll.Count > 1)
@@ -158,13 +158,13 @@ namespace LoadL.loadDatabase
                                     }
                                 }
                                 // rimuove da sortedtable i records appena elaborati
-                                lbwp.RemoveAll(r => r.WEEK_PLAN == wte);
+                                lbwp.RemoveAll(r => r.Week == wte);
 
                             } while (lbwp.Count > 0);
                         }
                         //foreach (var rc in lbpc)
                         //{
-                        //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}, week = {rc.WEEK_PLAN}, priority = {rc.Priority}");
+                        //    Console.WriteLine($"planbu = {rc.PLAN_BU}, flaghr ={rc.FLAG_HR}, prodcatecory = {rc.PRODUCTION_CATEGORY}, week = {rc.Week}, priority = {rc.Priority}");
                         //}
                         //Console.ReadKey();
                     }

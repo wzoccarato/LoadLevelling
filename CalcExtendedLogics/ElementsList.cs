@@ -142,11 +142,11 @@ namespace CalcExtendedLogics
             {
                 if (ValidateWeekFormat(weekplan))
                 {
-                    var wklist = (from rec in _list where rec.WEEK_PLAN == weekplan select rec).ToList();
+                    var wklist = (from rec in _list where rec.Week == weekplan select rec).ToList();
                     return wklist;
                 }
                 else
-                    throw new TraceException(fname, $"Formato errato WEEK_PLAN: {weekplan}");
+                    throw new TraceException(fname, $"Formato errato Week: {weekplan}");
             }
             catch (TraceException)
             {
@@ -165,10 +165,10 @@ namespace CalcExtendedLogics
             {
                 if (ValidateWeekFormat(weekplan))
                 {
-                    _list.RemoveAll(r => r.WEEK_PLAN == weekplan);
+                    _list.RemoveAll(r => r.Week == weekplan);
                 }
                 else
-                    throw new TraceException(fname, $"Formato errato WEEK_PLAN: {weekplan}");
+                    throw new TraceException(fname, $"Formato errato Week: {weekplan}");
             }
             catch (TraceException)
             {

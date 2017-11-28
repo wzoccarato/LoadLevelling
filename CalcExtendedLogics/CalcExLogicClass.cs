@@ -93,8 +93,8 @@ namespace CalcExtendedLogics
                                 el.IND_SEASONAL_STATUS,
                                 el.TCH_WEEK,
                                 el.PLANNING_LEVEL,
-                                el.Event,
-                                el.WEEK_PLAN,
+                                el.EVENT,
+                                el.Week,
                                 el.F1,el.F2,el.F3,
                                 el.Ahead,
                                 el.Late,
@@ -272,7 +272,7 @@ namespace CalcExtendedLogics
         /// 2. per il PLAN_BU estratto, estrae una lista distinct di tutti i FLAG_HR (Flag high rotation)
         /// 3. per il PLAN_BU estratto e il FLAG_HR estratto, estrae una lista distinct di tutti i PRODUCTION_CATEGORY (Categoria di produzione)
         /// 4. per il PLAN_BU estratto, il FLAG_HR estratto, per ciascuna PRODUCTION_CATEGORY estrae tutti i relativi record dalla liata LoadLevelling 
-        /// 5. La lista cosi' ottenuta viene ordinata per WEEK_PLAN crescente e per Priority crescente (priorita' piu' alta a valore piu' basso)
+        /// 5. La lista cosi' ottenuta viene ordinata per Week crescente e per Priority crescente (priorita' piu' alta a valore piu' basso)
         /// 6. di questa lista viene poi eleborata una settimana alla volta
         /// </summary>
         private ElementsList OptimizeWorkload()
@@ -332,8 +332,8 @@ namespace CalcExtendedLogics
                         {
                             Console.WriteLine($"Production_category = {pc}");
 
-                            // ordina per WEEK_PLAN e poi per Priority
-                            //var sortedtable = ll.OrderBy(g => g.WEEK_PLAN).ThenBy(h => h.Priority).ToList();
+                            // ordina per Week e poi per Priority
+                            //var sortedtable = ll.OrderBy(g => g.Week).ThenBy(h => h.Priority).ToList();
 
                             // tutti gli elementi con plan_bu, flag_hr e production_category,
                             // sortati per week_plan e poi per priority, vengono aggiunti alla sortedweeklist
@@ -347,9 +347,9 @@ namespace CalcExtendedLogics
                             {
                                 do
                                 {
-                                    var wte = sortedweeklist.GetFirst().WEEK_PLAN;
+                                    var wte = sortedweeklist.GetFirst().Week;
 
-                                    // foreach(WEEK_PLAN).....
+                                    // foreach(Week).....
                                     // estrae dalla lista sortata soltanto i record relativi alla 
                                     // week che deve essere elaborata. Questa lista e' gia' ordinata per 
                                     // priorita' decrescente (la priorita' piu' alta ha il numero piu' basso).
@@ -399,7 +399,7 @@ namespace CalcExtendedLogics
                     if(!toelaborate.ValidateList())
                     {
                         string message =
-                            $"Capacy non è la stessa per tutta la WEEK_PLAN. Week = {toelaborate.GetFirst().WEEK_PLAN}";
+                            $"Capacy non è la stessa per tutta la Week. Week = {toelaborate.GetFirst().Week}";
                         throw new TraceException(fname, message);
                     }
                     if (toelaborate.GetFirst().Capacity > 0) // la capacity deve essere uguale per tutti i record, per requisito
@@ -410,7 +410,7 @@ namespace CalcExtendedLogics
                         // a questa funzione passo soltanto il parametro Late, che fissa
                         // quante settimane indietro sia possibile elaborare
                         // tronca Late a intero
-                        IList<LoadLevellingWork> waiting = GetWaitingRequests(toelaborate.GetFirst().WEEK_PLAN,(int)toelaborate.GetFirst().Late,waitlist);
+                        IList<LoadLevellingWork> waiting = GetWaitingRequests(toelaborate.GetFirst().Week,(int)toelaborate.GetFirst().Late,waitlist);
                         if (waiting.Count > 0)
                         {
                             ElabWaitingRequests(waiting, toelaborate, appendedelements);
@@ -424,7 +424,7 @@ namespace CalcExtendedLogics
                         {
                             if(toelaborate.GetFirst().Capacity > 0)     // la capacity è uguale per tutti i record
                             {
-                                IList<LoadLevellingWork> moveup = GetAheadRequests(toelaborate.GetFirst().WEEK_PLAN, (int)toelaborate.GetFirst().Ahead,sortedweeks);
+                                IList<LoadLevellingWork> moveup = GetAheadRequests(toelaborate.GetFirst().Week, (int)toelaborate.GetFirst().Ahead,sortedweeks);
                                 ElabAheadRequests(moveup, toelaborate, appendedelements);
                             }
                             else
@@ -468,7 +468,7 @@ namespace CalcExtendedLogics
         }
 
         /// <summary>
-        /// Riceve in argomento il parametro WEEK_PLAN e il parametro Late
+        /// Riceve in argomento il parametro Week e il parametro Late
         /// relativo alla settimana in elaborazione.
         /// consulta la coda delle settimane in attesa di elaborazione,
         /// e ritorna una lista contenente soltanto quelle che 
@@ -486,7 +486,7 @@ namespace CalcExtendedLogics
         }
 
         /// <summary>
-        /// Riceve in argomento il parametro WEEK_PLAN e il parametro ahead
+        /// Riceve in argomento il parametro Week e il parametro ahead
         /// relativo alla settimana in elaborazione.
         /// consulta la coda delle settimane da elaborare,
         /// e ritorna una lista contenente soltanto quelle che 
@@ -649,7 +649,7 @@ namespace CalcExtendedLogics
                                     allocated += el.Required;
 
                                     LoadLevellingWork newel = el.Clone();
-                                    newel.TCH_WEEK = el.WEEK_PLAN;
+                                    newel.TCH_WEEK = el.Week;
                                     newel.Allocated = Math.Round(el.Required, Global.ROUNDDIGITS);
                                     newel.Required = newel.Allocated; // se required == allocated allora la richiesta risulta soddisfatta 
 
@@ -673,7 +673,7 @@ namespace CalcExtendedLogics
                                         allocated += toallocate;
 
                                         LoadLevellingWork newel = el.Clone();
-                                        newel.TCH_WEEK = el.WEEK_PLAN;
+                                        newel.TCH_WEEK = el.Week;
                                         newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
                                         newel.Required = el.Required;
                                         newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
@@ -695,7 +695,7 @@ namespace CalcExtendedLogics
                                         cap = 0;
 
                                         LoadLevellingWork newel = el.Clone();
-                                        newel.TCH_WEEK = el.WEEK_PLAN;
+                                        newel.TCH_WEEK = el.Week;
                                         newel.Allocated = el.Allocated;
                                         newel.Required = el.Required;
                                         newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
@@ -713,7 +713,7 @@ namespace CalcExtendedLogics
                         if (toappend.Count > 0)
                         {
                             appendedrequests.AddRange(toappend.GetList());
-                            Console.WriteLine($"WEEK_PLAN: {toappend.GetFirst().WEEK_PLAN} Allocati: {appendedrequests.Count}");
+                            Console.WriteLine($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                             toappend.Purge();
                         }
                     }
@@ -758,7 +758,7 @@ namespace CalcExtendedLogics
                     // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
                     // a priorità più elevata.
                     var priorities = (from rec in waiting
-                                      group rec by new { rec.WEEK_PLAN, rec.Priority }
+                                      group rec by new { WEEK_PLAN = rec.Week, rec.Priority }
                                       into g
                                       orderby g.Key.WEEK_PLAN, g.Key.Priority, g.Count()
                                       select new { week = g.Key.WEEK_PLAN, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
@@ -774,10 +774,10 @@ namespace CalcExtendedLogics
                         initialcap -= allocated;
 
                         var todo = (from r in waiting
-                                    where r.WEEK_PLAN == rec.week && 
+                                    where r.Week == rec.week && 
                                     (int)r.Priority == rec.priority
                                     select r).ToList();
-                        double totreq = waiting.Where(r => (int)r.Priority == rec.priority && r.WEEK_PLAN == rec.week).Sum(t => t.Required);
+                        double totreq = waiting.Where(r => (int)r.Priority == rec.priority && r.Week == rec.week).Sum(t => t.Required);
                         foreach (var w in todo)
                         {
                             foreach (var el in llw)
@@ -791,7 +791,7 @@ namespace CalcExtendedLogics
                                         allocated += w.Required;
 
                                         LoadLevellingWork newel = el.Clone();
-                                        newel.TCH_WEEK = w.WEEK_PLAN;
+                                        newel.TCH_WEEK = w.Week;
                                         newel.Allocated = Math.Round(w.Required, Global.ROUNDDIGITS);
                                         newel.Required = newel.Allocated; // se required == allocated allora la richiesta risulta soddisfatta 
 
@@ -815,7 +815,7 @@ namespace CalcExtendedLogics
                                             allocated += toallocate;
 
                                             LoadLevellingWork newel = el.Clone();
-                                            newel.TCH_WEEK = w.WEEK_PLAN;
+                                            newel.TCH_WEEK = w.Week;
                                             newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
                                             newel.Required = w.Required;
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
@@ -837,7 +837,7 @@ namespace CalcExtendedLogics
                                             cap = 0;
                                                 
                                             LoadLevellingWork newel = el.Clone();
-                                            newel.TCH_WEEK = w.WEEK_PLAN;
+                                            newel.TCH_WEEK = w.Week;
                                             newel.Allocated = el.Allocated;
                                             newel.Required = w.Required;
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
@@ -855,7 +855,7 @@ namespace CalcExtendedLogics
                             if (toappend.Count > 0)
                             {
                                 appendedrequests.AddRange(toappend.GetList());
-                                Console.WriteLine($"WEEK_PLAN: {toappend.GetFirst().WEEK_PLAN} Allocati: {appendedrequests.Count}");
+                                Console.WriteLine($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                                 toappend.Purge();
                             }
                         }
@@ -905,7 +905,7 @@ namespace CalcExtendedLogics
                     // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
                     // a priorità più elevata.
                     var priorities = (from rec in moveuprequests
-                                      group rec by new { rec.WEEK_PLAN, rec.Priority }
+                                      group rec by new { WEEK_PLAN = rec.Week, rec.Priority }
                                       into g
                                       orderby g.Key.WEEK_PLAN, g.Key.Priority, g.Count()
                                       select new { week = g.Key.WEEK_PLAN, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
@@ -920,10 +920,10 @@ namespace CalcExtendedLogics
                         initialcap -= allocated;
 
                         var todo = (from r in moveuprequests
-                                    where r.WEEK_PLAN == rec.week &&
+                                    where r.Week == rec.week &&
                                     (int)r.Priority == rec.priority
                                     select r).ToList();
-                        double totreq = moveuprequests.Where(r => (int)r.Priority == rec.priority && r.WEEK_PLAN == rec.week).Sum(t => t.Required);
+                        double totreq = moveuprequests.Where(r => (int)r.Priority == rec.priority && r.Week == rec.week).Sum(t => t.Required);
                         foreach (var h in todo)
                         {
                             foreach (var el in llw)
@@ -937,7 +937,7 @@ namespace CalcExtendedLogics
                                         allocated += h.Required;
 
                                         LoadLevellingWork newel = el.Clone();
-                                        newel.TCH_WEEK = h.WEEK_PLAN;
+                                        newel.TCH_WEEK = h.Week;
                                         newel.Allocated = Math.Round(h.Required, Global.ROUNDDIGITS);
                                         newel.Required = newel.Allocated; // se required == allocated allora la richiesta risulta soddisfatta 
 
@@ -960,7 +960,7 @@ namespace CalcExtendedLogics
                                                 throw new TraceException(fname, $"Required è inconsistente: {el.Required}");
 
                                             LoadLevellingWork newel = el.Clone();
-                                            newel.TCH_WEEK = h.WEEK_PLAN;
+                                            newel.TCH_WEEK = h.Week;
                                             newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
                                             newel.Required = h.Required;
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
@@ -982,7 +982,7 @@ namespace CalcExtendedLogics
                                             cap = 0;
 
                                             LoadLevellingWork newel = el.Clone();
-                                            newel.TCH_WEEK = h.WEEK_PLAN;
+                                            newel.TCH_WEEK = h.Week;
                                             newel.Allocated = el.Allocated;
                                             newel.Required = h.Required;
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
@@ -1000,7 +1000,7 @@ namespace CalcExtendedLogics
                             if (toappend.Count > 0)
                             {
                                 appendedrequests.AddRange(toappend.GetList());
-                                Console.WriteLine($"WEEK_PLAN: {toappend.GetFirst().WEEK_PLAN} Allocati: {appendedrequests.Count}");
+                                Console.WriteLine($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                                 toappend.Purge();
                             }
                             
