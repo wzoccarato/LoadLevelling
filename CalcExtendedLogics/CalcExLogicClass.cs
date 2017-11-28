@@ -146,8 +146,9 @@ namespace CalcExtendedLogics
 
             try
             {
-
-                _schema = ConvertDataTable<Schema>(schemadt);
+                // TODO: da togliere non appena sistemata la questione dei nomi dei campi della tabella Schema
+                // TODO: la funzione corretta è ConvertDataTable
+                _schema = ConvertSchemaDataTable<Schema>(schemadt);
 
                 // acquisisce i valori degli heading dalla tabella schema
 #if LOCALTEST
@@ -1085,6 +1086,51 @@ namespace CalcExtendedLogics
             {
                 foreach (PropertyInfo pro in temp.GetProperties())
                 {
+                    if (pro.Name != column.ColumnName) continue;
+                    var value = dr[column.ColumnName] is DBNull ? string.Empty : dr[column.ColumnName].ToString();
+                    pro.SetValue(obj, value, null);
+                    break;
+                }
+            }
+            return obj;
+        }
+
+        /// <summary>
+        /// Converte l'oggetto DataTable passato in argomento 
+        /// in una collection di cui ritorna l'interfaccia IList.
+        /// TODO: togliere questa non appena sistemata la questione relativa al nome dei campi nella tabella Schema
+        /// TODO: la funzione corretta è ConvertDataTable
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dt"></param>
+        /// <returns></returns>
+        private IList<T> ConvertSchemaDataTable<T>(DataTable dt)
+        {
+            IList<T> data = new Collection<T>();
+            foreach (DataRow row in dt.Rows)
+            {
+                T item = GetSchemaItem<T>(row);
+                data.Add(item);
+            }
+            return data;
+        }
+
+        /// <summary>
+        /// utilizza Reflection per popolare le proprieta'
+        /// dell'oggetto T
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dr"></param>
+        /// <returns></returns>
+        private T GetSchemaItem<T>(DataRow dr)
+        {
+            Type temp = typeof(T);
+            T obj = Activator.CreateInstance<T>();
+
+            foreach (DataColumn column in dr.Table.Columns)
+            {
+                foreach (PropertyInfo pro in temp.GetProperties())
+                {
 #if LOCALTEST
                     if (pro.Name == column.ColumnName)
                     {
@@ -1104,6 +1150,7 @@ namespace CalcExtendedLogics
             }
             return obj;
         }
-#endregion
+
+        #endregion
     }
 }
