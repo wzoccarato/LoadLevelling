@@ -16,7 +16,7 @@ namespace CalcExtendedLogics.DataLayer.DbTables
         [StringLength(10, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
         public string Event { get; set; }
         [StringLength(6, ErrorMessage = "errore lunghezza stringa", MinimumLength = 6)]
-        public string WEEK_PLAN { get; set; }
+        public string WEEK { get; set; }
         public double? a { get; set; }           // F1 spare. heading riconfigurabile
         public double? b { get; set; }           // F2 spare
         public double? c { get; set; }           // F3 spare

@@ -24,7 +24,7 @@ PRE='USE SDG_Consulting
 	[TCH_WEEK],
 	[PLANNING_LEVEL],
 	[EVENT],
-	[WEEK_PLAN],
+	[WEEK],
 	[F1],[F2],[F3],
 	[Ahead],
 	[Late],
@@ -54,7 +54,7 @@ tail -"$NUML2" $1 | nawk -v q="'" 'BEGIN{FS=";"}
 	split($5,plan_lev," ")
 	split($6,event," ")
 
-	#[PLANNING_LEVEL],[EVENT],[WEEK_PLAN]
+	#[PLANNING_LEVEL],[EVENT],[WEEK]
 	printf("\x27%s\x27,\x27%s %s %s\x27,\x27%s\x27,",plan_lev[1],event[1],event[2],event[3],$7)
 
 	#[F1],[F2],[F3]

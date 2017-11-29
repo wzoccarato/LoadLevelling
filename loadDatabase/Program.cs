@@ -52,7 +52,7 @@ namespace LoadL.loadDatabase
 
             if (args.Length != 1)
             {
-                Console.Write($"Usage: loadDatabase(<path to Insert statements file>)\nExit");
+                Console.Write($"Usage: loadDatabase(<path to Insert_statements_file>)\nExit");
                 Environment.Exit(1);
             }
             Console.WriteLine($"Inizio insert in database {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
@@ -101,7 +101,7 @@ namespace LoadL.loadDatabase
 
         private static void VerifyDataCongruence()
         {
-            Console.WriteLine($"VeridyDataCongruence INPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            Console.WriteLine($"VerifyDataCongruence INPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
             var pbu = Dbq.GetDistinctPlanBu();
             foreach (var p in pbu)
             {
@@ -170,7 +170,7 @@ namespace LoadL.loadDatabase
                     }
                 }
             }
-            Console.WriteLine($"VeridyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            Console.WriteLine($"VerifyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
 
             // corregge tutti i record che hanno Required = 0
             var newreq = new Random();
@@ -186,7 +186,7 @@ namespace LoadL.loadDatabase
             Dbq.MassiveSaveData();
 
             Console.WriteLine($"END massive saving on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-            Console.WriteLine($"VeridyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            Console.WriteLine($"VerifyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
         }
     }
 }
