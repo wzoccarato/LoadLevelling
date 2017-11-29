@@ -33,7 +33,7 @@ namespace CalcExtendedLogics
             {
                 // Test di consistenza
                 var invalid = (from rec in _list
-                               where rec.Id != null && rec.Id == newelement.Id
+                               where rec.ID != null && rec.ID == newelement.ID
                                select rec).Any();
                 if (invalid)
                     throw new TraceException(fname, "Rilevata chiave multipla. Oggetto non valido");
@@ -63,8 +63,8 @@ namespace CalcExtendedLogics
                 // Test di consistenza un gli id == null li permetto, perche' sono gli elementi nuovi 
                 // inseriti in lista in append
                 var invalid = (from rec in _list
-                               where rec.Id != null
-                               group rec by rec.Id into g
+                               where rec.ID != null
+                               group rec by rec.ID into g
                                orderby g.Key, g.Count()
                                select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count>1);
                 if (invalid)
@@ -96,7 +96,7 @@ namespace CalcExtendedLogics
                 // Test di consistenza
                 var invalid = (from rec in _list
                                where rec != null
-                               group rec by rec.Id into g
+                               group rec by rec.ID into g
                                orderby g.Key, g.Count()
                                select new { id = g.Key, count = g.Count() }).ToList().Any(t => t.count > 1);
                 if (invalid)

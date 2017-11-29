@@ -103,5 +103,13 @@ namespace CalcExtendedLogics
             return isvalid;
         }
 
+        public static void WriteMessage(string message)
+        {
+#if LOCALTEST
+            Console.WriteLine(message);
+#else
+#endif
+        }
+
     }
 }

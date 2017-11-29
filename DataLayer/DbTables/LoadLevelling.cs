@@ -17,9 +17,9 @@ namespace CalcExtendedLogics.DataLayer.DbTables
         public string Event { get; set; }
         [StringLength(6, ErrorMessage = "errore lunghezza stringa", MinimumLength = 6)]
         public string WEEK_PLAN { get; set; }
-        public virtual double a { get; set; }           // F1 spare. heading riconfigurabile
-        public double b { get; set; }           // F2 spare
-        public double c { get; set; }           // F3 spare
+        public double? a { get; set; }           // F1 spare. heading riconfigurabile
+        public double? b { get; set; }           // F2 spare
+        public double? c { get; set; }           // F3 spare
         public double d { get; set; }           // Ahead
         public double e { get; set; }           // Late
         public double f { get; set; }           // Priority
@@ -29,6 +29,6 @@ namespace CalcExtendedLogics.DataLayer.DbTables
         public string i { get; set; }           // PLAN_BU
         [StringLength(1, ErrorMessage = "errore lunghezza stringa", MinimumLength = 1)]
         public string j { get; set; }           // FLAG_HR
-        public double k { get; set; }           // Allocated
+        public double? k { get; set; }           // Allocated
     }
 }

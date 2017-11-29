@@ -1,9 +1,11 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
 using System.Reflection;
+using System.Windows.Forms;
 using CalcExtendedLogics.CalcExtendedLogics;
 using CalcExtendedLogics.DataLayer.DbTables;
 using CalcExtendedLogics.Infrastructure;
@@ -112,16 +114,13 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-#if LOCALTEST
-                Console.WriteLine(e.TraceMessage);
-#endif
+                Helper.WriteMessage(e.TraceMessage);
                 // throw
                 return false;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                //throw new TraceException(fname, e.Message);
+                Helper.WriteMessage(e.Message);
                 return false;
             }
         }
@@ -255,12 +254,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
 
@@ -307,8 +306,8 @@ namespace CalcExtendedLogics
 
                 foreach (var pbu in _planBu)
                 {
-                    //Console.WriteLine($"planbu = {rec.planbu}, count = {rec.count}");
-                    Console.WriteLine($"planbu = {pbu}");
+                    //Helper.WriteMessage($"planbu = {rec.planbu}, count = {rec.count}");
+                    Helper.WriteMessage($"planbu = {pbu}");
 
                     // FLAG_HR
                     //_flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).ToList();
@@ -321,8 +320,8 @@ namespace CalcExtendedLogics
 
                     foreach (var fhr in _flagHr)
                     {
-                        //Console.WriteLine($"flaghr = {fhr.flag_hr}, count = {fhr.count}");
-                        Console.WriteLine($"flaghr = {fhr}");
+                        //Helper.WriteMessage($"flaghr = {fhr.flag_hr}, count = {fhr.count}");
+                        Helper.WriteMessage($"flaghr = {fhr}");
 
                         // PRODUCTION_CATEGORY
                         //var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
@@ -330,7 +329,7 @@ namespace CalcExtendedLogics
 
                         foreach (var pc in prodCategory)
                         {
-                            Console.WriteLine($"Production_category = {pc}");
+                            Helper.WriteMessage($"Production_category = {pc}");
 
                             // ordina per Week e poi per Priority
                             //var sortedtable = ll.OrderBy(g => g.Week).ThenBy(h => h.Priority).ToList();
@@ -341,7 +340,7 @@ namespace CalcExtendedLogics
 
                             waitList.Purge();   // ad ogni iterazione deve resettare la lista delle week in attesa di completamento
 
-                            Console.WriteLine($"Record da elaborare per {pc} = {sortedweeklist.Count}");
+                            Helper.WriteMessage($"Record da elaborare per {pc} = {sortedweeklist.Count}");
 
                             if (sortedweeklist.Count > 0)
                             {
@@ -371,12 +370,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
         }
@@ -444,12 +443,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
         }
@@ -544,12 +543,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
         }
@@ -598,12 +597,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
         }
@@ -713,7 +712,7 @@ namespace CalcExtendedLogics
                         if (toappend.Count > 0)
                         {
                             appendedrequests.AddRange(toappend.GetList());
-                            Console.WriteLine($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
+                            Helper.WriteMessage($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                             toappend.Purge();
                         }
                     }
@@ -728,12 +727,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
         }
@@ -855,7 +854,7 @@ namespace CalcExtendedLogics
                             if (toappend.Count > 0)
                             {
                                 appendedrequests.AddRange(toappend.GetList());
-                                Console.WriteLine($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
+                                Helper.WriteMessage($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                                 toappend.Purge();
                             }
                         }
@@ -876,12 +875,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
         }
@@ -1000,7 +999,7 @@ namespace CalcExtendedLogics
                             if (toappend.Count > 0)
                             {
                                 appendedrequests.AddRange(toappend.GetList());
-                                Console.WriteLine($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
+                                Helper.WriteMessage($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                                 toappend.Purge();
                             }
                             
@@ -1022,12 +1021,12 @@ namespace CalcExtendedLogics
             }
             catch (TraceException e)
             {
-                Console.WriteLine(e.TraceMessage);
+                Helper.WriteMessage(e.TraceMessage);
                 throw;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Helper.WriteMessage(e.Message);
                 throw new TraceException(fname, e.Message);
             }
 
@@ -1087,8 +1086,31 @@ namespace CalcExtendedLogics
                 foreach (PropertyInfo pro in temp.GetProperties())
                 {
                     if (pro.Name != column.ColumnName) continue;
-                    var value = dr[column.ColumnName] is DBNull ? string.Empty : dr[column.ColumnName].ToString();
-                    pro.SetValue(obj, value, null);
+                    //var value = dr[column.ColumnName] is DBNull ? string.Empty : dr[column.ColumnName].ToString();
+                    var value = dr[column.ColumnName];
+                    if (value is DBNull)
+                    {
+                        if (pro.PropertyType == typeof(double))
+                        {
+                            pro.SetValue(obj,0,null);
+                        }
+                        else if (pro.PropertyType == typeof(int))
+                        {
+                            pro.SetValue(obj, 0, null);
+                        }
+                        else if (pro.PropertyType == typeof(string))
+                        {
+                            pro.SetValue(obj, string.Empty, null);
+                        }
+                        else
+                        {
+                            pro.SetValue(obj, null, null);
+                        }
+                    }
+                    else
+                    {
+                        pro.SetValue(obj, value, null);
+                    }
                     break;
                 }
             }

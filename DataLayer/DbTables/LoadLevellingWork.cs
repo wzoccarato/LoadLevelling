@@ -8,7 +8,7 @@ namespace CalcExtendedLogics.DataLayer.DbTables
     public class LoadLevellingWork
     {
         [Key]
-        public int? Id { get; set; }
+        public int? ID { get; set; }
         [StringLength(2, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
         public string PRODUCTION_CATEGORY { get; set; }
         public string IND_SEASONAL_STATUS { get; set; }
@@ -38,7 +38,7 @@ namespace CalcExtendedLogics.DataLayer.DbTables
         public LoadLevellingWork Clone()
         {
             LoadLevellingWork retval = (LoadLevellingWork)this.MemberwiseClone();
-            retval.Id = null;
+            retval.ID = null;
             return retval;
         }
     }
