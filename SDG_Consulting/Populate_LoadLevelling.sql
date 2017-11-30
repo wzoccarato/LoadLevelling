@@ -7,7 +7,7 @@ INSERT INTO [dbo].[LoadLevelling]
 		   [TCH_WEEK],
 		   [PLANNING_LEVEL],
 		   [EVENT],
-		   [WEEK],
+		   [Week],
 		   [Ahead],
 		   [Late],
 		   [Priority],

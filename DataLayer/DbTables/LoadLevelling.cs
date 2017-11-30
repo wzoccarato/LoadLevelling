@@ -5,7 +5,7 @@ namespace CalcExtendedLogics.DataLayer.DbTables
     public class LoadLevelling
     {
         [Key]
-        public int Id { get; set; }
+        public int ID { get; set; }
         [StringLength(2,ErrorMessage = "errore lunghezza stringa",MinimumLength = 2)]
         public string PRODUCTION_CATEGORY { get; set; }
         public string IND_SEASONAL_STATUS { get; set; }
@@ -14,9 +14,9 @@ namespace CalcExtendedLogics.DataLayer.DbTables
         [StringLength(10, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
         public string PLANNING_LEVEL { get; set; }
         [StringLength(10, ErrorMessage = "errore lunghezza stringa", MinimumLength = 2)]
-        public string Event { get; set; }
+        public string EVENT { get; set; }
         [StringLength(6, ErrorMessage = "errore lunghezza stringa", MinimumLength = 6)]
-        public string WEEK { get; set; }
+        public string Week { get; set; }
         public double? a { get; set; }           // F1 spare. heading riconfigurabile
         public double? b { get; set; }           // F2 spare
         public double? c { get; set; }           // F3 spare

@@ -757,10 +757,10 @@ namespace CalcExtendedLogics
                     // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
                     // a priorità più elevata.
                     var priorities = (from rec in waiting
-                                      group rec by new { WEEK = rec.Week, rec.Priority }
+                                      group rec by new { Week = rec.Week, rec.Priority }
                                       into g
-                                      orderby g.Key.WEEK, g.Key.Priority, g.Count()
-                                      select new { week = g.Key.WEEK, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
+                                      orderby g.Key.Week, g.Key.Priority, g.Count()
+                                      select new { week = g.Key.Week, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
                     // Le richieste pendenti devono essere soddisfatte raggruppandole per priorità.
                     // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
                     // la percentuale reciproca delle richieste
@@ -904,10 +904,10 @@ namespace CalcExtendedLogics
                     // di assegnare un carico di lavoro alla settimana corrente, a partire da quello
                     // a priorità più elevata.
                     var priorities = (from rec in moveuprequests
-                                      group rec by new { WEEK = rec.Week, rec.Priority }
+                                      group rec by new { Week = rec.Week, rec.Priority }
                                       into g
-                                      orderby g.Key.WEEK, g.Key.Priority, g.Count()
-                                      select new { week = g.Key.WEEK, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
+                                      orderby g.Key.Week, g.Key.Priority, g.Count()
+                                      select new { week = g.Key.Week, priority = (int)g.Key.Priority, count = g.Count() }).ToList();
                     // Le richieste devono essere soddisfatte raggruppandole per priorità.
                     // A parità di priorità, le lavorazioni devono essere assegnare mantenendo
                     // la percentuale reciproca delle richieste
