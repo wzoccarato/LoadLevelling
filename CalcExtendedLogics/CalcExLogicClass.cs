@@ -86,8 +86,7 @@ namespace CalcExtendedLogics
 
                         var allocatedElements = cexlc.OptimizeWorkload();
 
-                        var allocated = allocatedElements.GetList().Where(r => r.ID == null).Select(r => r).ToList();
-
+                        //var allocated = allocatedElements.GetList().Where(r => r.ID == null).Select(r => r).ToList();
 
                         foreach (var el in allocatedElements.GetList())
                         {
