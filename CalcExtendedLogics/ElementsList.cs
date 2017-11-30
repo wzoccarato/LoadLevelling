@@ -56,17 +56,10 @@ namespace CalcExtendedLogics
             var fname = MethodBase.GetCurrentMethod().DeclaringType?.Name + "." + MethodBase.GetCurrentMethod().Name;
             try
             {
-
-                var lst1 = (from rec in elements where rec.ID != null select rec).ToList();
-
-
                 foreach (var el in elements)
                 {
                     _list.Add(el);
                 }
-
-                var lst = (from rec in _list where rec.ID == null select rec).ToList();
-
 
                 // Test di consistenza gli id == null li permetto, perche' sono gli elementi nuovi 
                 // inseriti in lista in append

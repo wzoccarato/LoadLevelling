@@ -37,6 +37,7 @@ namespace CalcExtendedLogics.DataLayer.DbTables
         // esegue una copia clone dell'oggetto
         public LoadLevellingWork Clone()
         {
+            // ID non viene clonato, perché è un autoincrement impostato all'inserimento nel db
             LoadLevellingWork retval = (LoadLevellingWork)this.MemberwiseClone();
             retval.ID = null;
             return retval;

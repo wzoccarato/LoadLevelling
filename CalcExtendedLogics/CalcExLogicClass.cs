@@ -86,6 +86,9 @@ namespace CalcExtendedLogics
 
                         var allocatedElements = cexlc.OptimizeWorkload();
 
+                        var allocated = allocatedElements.GetList().Where(r => r.ID == null).Select(r => r).ToList();
+
+
                         foreach (var el in allocatedElements.GetList())
                         {
 
@@ -941,7 +944,7 @@ namespace CalcExtendedLogics
                                         newel.Required = newel.Allocated; // se required == allocated allora la richiesta risulta soddisfatta 
 
                                         h.Required = 0; // la richiesta e' stata soddisfatta. prenoto l'elemento per la rimozione dalla lista
-                                        toappend.AddElement(el);
+                                        toappend.AddElement(newel);
                                         break; // passa all'elemento successivo nella lista
                                     }
                                     // in questo caso il richiesto deve essere allocato in 
