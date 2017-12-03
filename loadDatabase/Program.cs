@@ -58,7 +58,13 @@ namespace LoadL.loadDatabase
             Console.WriteLine($"Inizio insert in database {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
             RunScript(args[0]);
             Console.WriteLine($"Fine insert in database {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            // la funzione che segue corregge i dati in tabella, per  renderli coerenti
+            // se non serve, e' necessario commentarla
             VerifyDataCongruence();
+
+            Console.WriteLine($"START massive saving on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
+            Dbq.MassiveSaveData();
+            Console.WriteLine($"END massive saving on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
         }
 
         private static void RunScript(string filepath)
@@ -180,12 +186,6 @@ namespace LoadL.loadDatabase
             //(from rec in Dbq.LoadLevellingTable where rec.h < 0.1 select rec).UpdateFromQuery(rec => new LoadLevelling {h = newreq.Next(24, 300)});
 
             Console.WriteLine($"END correzione valori di required == 0 : {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-
-            Console.WriteLine($"START massive saving on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-
-            Dbq.MassiveSaveData();
-
-            Console.WriteLine($"END massive saving on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
             Console.WriteLine($"VerifyDataCongruence OUTPUT: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
         }
     }

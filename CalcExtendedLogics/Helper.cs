@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace CalcExtendedLogics
 {
@@ -101,6 +104,29 @@ namespace CalcExtendedLogics
                 }
             }
             return isvalid;
+        }
+
+        public static void ConvertTableToInsertSatements(DataTable dt, FileStream fs)
+        {
+            List<string> insert = new List<string>();
+            UnicodeEncoding uniEncoding = new UnicodeEncoding();
+            fs.Seek(0, SeekOrigin.End);
+            foreach (DataRow r in dt.Rows)
+            {
+                string newinsert = "(";
+                var length = r.ItemArray.Length;
+                for (int i = 0; i < length; i++)
+                {
+                    newinsert += $"'{r.ItemArray[i].ToString()}'";
+                    if (i < length - 1)
+                    {
+                        newinsert += ",";
+                    }
+                }
+                newinsert += ")\r\n";
+                fs.Write(uniEncoding.GetBytes(newinsert),0,uniEncoding.GetByteCount(newinsert));
+            }
+            fs.Flush();
         }
 
         public static void WriteMessage(string message)
