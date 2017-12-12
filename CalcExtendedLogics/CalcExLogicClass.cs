@@ -83,24 +83,24 @@ namespace CalcExtendedLogics
                         var targetdt = dataset.Tables[targetdatatablename];
 
                         // crea insert statements per T-SQL dal dataset ricevuto in input
-                        //using (FileStream fs = new FileStream("LlInsertStatements.txt", 
-                        //    FileMode.Create,
-                        //    FileAccess.ReadWrite,
-                        //    FileShare.ReadWrite))
-                        //{
-                        //    Helper.ConvertTableToInsertSatements(targetdt, fs);
-                        //}
+                        using (FileStream fs = new FileStream("c:\\temp\\SDGConsulting\\LlInsertStatements.txt",
+                            FileMode.Create,
+                            FileAccess.ReadWrite,
+                            FileShare.ReadWrite))
+                        {
+                            Helper.ConvertTableToInsertSatements(targetdt, fs);
+                        }
 
                         var schemadt = dataset.Tables["Schema"];    // il nome della tabella bisognera' passarlo in argomento
 
                         // crea insert statements per T-SQL dal dataset ricevuto in input
-                        //using (FileStream fs = new FileStream("SchemaInsertStatements.txt",
-                        //    FileMode.Create,
-                        //    FileAccess.ReadWrite,
-                        //    FileShare.ReadWrite))
-                        //{
-                        //    Helper.ConvertTableToInsertSatements(schemadt, fs);
-                        //}
+                        using (FileStream fs = new FileStream("c:\\temp\\SDGConsulting\\SchemaInsertStatements.txt",
+                            FileMode.Create,
+                            FileAccess.ReadWrite,
+                            FileShare.ReadWrite))
+                        {
+                            Helper.ConvertTableToInsertSatements(schemadt, fs);
+                        }
 
                         cexlc.Initialize(targetdt, schemadt);
 
