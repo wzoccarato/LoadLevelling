@@ -109,7 +109,8 @@ namespace CalcExtendedLogics
         public static void ConvertTableToInsertSatements(DataTable dt, FileStream fs)
         {
             List<string> insert = new List<string>();
-            UnicodeEncoding uniEncoding = new UnicodeEncoding();
+            UTF8Encoding utf8Encoding = new UTF8Encoding();
+            UnicodeEncoding uniEncoding = new  UnicodeEncoding();
             fs.Seek(0, SeekOrigin.End);
             foreach (DataRow r in dt.Rows)
             {
@@ -124,7 +125,7 @@ namespace CalcExtendedLogics
                     }
                 }
                 newinsert += ")\r\n";
-                fs.Write(uniEncoding.GetBytes(newinsert),0,uniEncoding.GetByteCount(newinsert));
+                fs.Write(utf8Encoding.GetBytes(newinsert),0,utf8Encoding.GetByteCount(newinsert));
             }
             fs.Flush();
         }

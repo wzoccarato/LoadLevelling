@@ -85,11 +85,54 @@ namespace CalcExtendedLogics.Infrastructure.AccessLayer
         {
             _context.SaveChanges();
         }
-
         public void MassiveSaveData()
         {
-            _context.BulkSaveChanges();
+            try
+            {
+                _context.BulkSaveChanges();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+            
         }
+
+        public void UpdateData(List<LoadLevelling> list)
+        {
+            try
+            {
+                foreach (var el in list)
+                {
+                    _context.LoadLevellings.Attach(el);
+                    _context.Entry(el).State = EntityState.Modified;
+                    _context.SaveChanges();
+                }
+                _context.BulkUpdate(list);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+        }
+
+        public void MassiveUpdateData(List<LoadLevelling> list)
+        {
+            try
+            {
+                _context.BulkUpdate(list);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+
+        }
+
 
         #endregion
 

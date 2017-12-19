@@ -82,6 +82,8 @@ namespace CalcExtendedLogics
                     case "loadl":
                         var targetdt = dataset.Tables[targetdatatablename];
 
+#if LOCALTEST
+#else
                         // crea insert statements per T-SQL dal dataset ricevuto in input
                         using (FileStream fs = new FileStream("c:\\temp\\SDGConsulting\\LlInsertStatements.txt",
                             FileMode.Create,
@@ -101,6 +103,8 @@ namespace CalcExtendedLogics
                         {
                             Helper.ConvertTableToInsertSatements(schemadt, fs);
                         }
+#endif
+
 
                         cexlc.Initialize(targetdt, schemadt);
 
@@ -129,7 +133,8 @@ namespace CalcExtendedLogics
                                 el.FLAG_HR,
                                 el.Allocated);
                         }
-
+                        break;
+                    default:
                         break;
                 }
                 return true; 

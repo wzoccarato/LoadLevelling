@@ -1,4 +1,5 @@
-﻿using System.Data.Entity;
+﻿using System.Collections.Generic;
+using System.Data.Entity;
 using System.Linq;
 using CalcExtendedLogics.DataLayer.DbTables;
 
@@ -14,5 +15,7 @@ namespace CalcExtendedLogics.Infrastructure.Abstract
         Database LlDatabase { get; }                                // ritorna il database rappresentato dal DbContext
         void Save();                                                // usa SaveChanges di Entity Framework                                
         void MassiveSaveData();                                     // usa BulkSaveChanges di Z.EntityFramework.Extensions
+        void UpdateData(List<LoadLevelling> list);
+        void MassiveUpdateData(List<LoadLevelling> list);
     }
 }
