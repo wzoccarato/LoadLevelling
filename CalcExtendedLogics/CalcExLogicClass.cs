@@ -81,6 +81,7 @@ namespace CalcExtendedLogics
                 {
                     case "loadl":
                         var targetdt = dataset.Tables[targetdatatablename];
+                        var schemadt = dataset.Tables["Schema"];    // il nome della tabella bisognera' passarlo in argomento
 
 #if LOCALTEST
 #else
@@ -92,8 +93,6 @@ namespace CalcExtendedLogics
                         {
                             Helper.ConvertTableToInsertSatements(targetdt, fs);
                         }
-
-                        var schemadt = dataset.Tables["Schema"];    // il nome della tabella bisognera' passarlo in argomento
 
                         // crea insert statements per T-SQL dal dataset ricevuto in input
                         using (FileStream fs = new FileStream("c:\\temp\\SDGConsulting\\SchemaInsertStatements.txt",
