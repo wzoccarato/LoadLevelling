@@ -108,6 +108,10 @@ namespace LoadL.loadDatabase
                                     val1 = Convert.ToDouble(ch[10].Substring(1));
                                     val2 = Convert.ToDouble(ch[11].Substring(1));
 
+                                    // arrotonda capacity e required
+                                    Math.Round(val1, Global.ROUNDDIGITS);
+                                    Math.Round(val2, Global.ROUNDDIGITS);
+
                                     ch[10] = ch[10].Replace(',', '.');      // capacity converte virgola decimale in punto
                                     ch[11] = ch[11].Replace(',', '.');      // required converte virgola decimale in punto
                                     if (ch[12] == "'")
