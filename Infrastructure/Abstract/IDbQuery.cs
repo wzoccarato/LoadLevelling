@@ -16,6 +16,9 @@ namespace CalcExtendedLogics.Infrastructure.Abstract
         void Save();                                                // usa SaveChanges di Entity Framework                                
         void MassiveSaveData();                                     // usa BulkSaveChanges di Z.EntityFramework.Extensions
         void UpdateData(List<LoadLevelling> list);
-        void MassiveUpdateData(List<LoadLevelling> list);
+        void MassiveUpdateData(List<LoadLevelling> list);           // utilizza BulkUpdate di Z.EntityFramework.Extensions 
+        void AddData(List<LoadLevelling> list);
+        void MassiveAddData(List<LoadLevelling> list);              // utilizza BulkInserData di Z.EntityFramework.Extensions
+
     }
 }

@@ -58,6 +58,7 @@
     <Compile Include="Abstract\ILoadLevelling.cs" />
     <Compile Include="AccessLayer\EfDbContext.cs" />
     <Compile Include="AccessLayer\EFLoadL.cs" />
+    <Compile Include="DataTableHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TraceException.cs" />
   </ItemGroup>

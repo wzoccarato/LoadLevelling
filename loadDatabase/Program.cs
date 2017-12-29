@@ -60,7 +60,7 @@ namespace LoadL.loadDatabase
                 Environment.Exit(1);
             }
             Console.WriteLine($"Inizio insert in database {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
-            RunScript(args[0]);
+            RunScript(args[0],Dbq.LlDatabase);
             Console.WriteLine($"Fine insert in database {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
 
             // la funzione che segue corregge i dati in tabella, per  renderli coerenti
@@ -72,14 +72,11 @@ namespace LoadL.loadDatabase
             Console.WriteLine($"END massive saving on database by Entity Framework: {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
         }
 
-        private static void RunScript(string filepath)
+        private static void RunScript(string filepath,Database db)
         {
             string newline = string.Empty;
             string[] ch = new string[1024];
             double val1, val2;
-
-            Database db = Dbq.LlDatabase;
-
 
             try
             {
@@ -160,7 +157,10 @@ namespace LoadL.loadDatabase
                                 ch[13] += $"{flaghr[simula.Next(2)]}";   // flag_hr
 
                             // vengono tenuti in considerazione soltanto i record per i quali capacity && required non sono entrambi a zero
-                            if ((Math.Abs(val1) < Global.EPSILON) && (Math.Abs(val2) < Global.EPSILON)) continue;
+                            //if ((Math.Abs(val1) < Global.EPSILON) && (Math.Abs(val2) < Global.EPSILON)) continue;
+                            // in questa invece scarto tutti i record che hanno required == 0
+                            if (Math.Abs(val2) < Global.EPSILON) continue;
+
 
                             newline = $"({ch[1]}',{ch[2]}',{ch[3]}',{ch[4]}',{ch[5]}',{ch[6]}','0','0','0',{ch[7]}',{ch[8]}',{ch[9]}',{ch[10]}',{ch[11]}',{ch[12]}',{ch[13]}',{ch[14]}";
                             //++count;
@@ -251,7 +251,7 @@ namespace LoadL.loadDatabase
                                         //    //Console.WriteLine($"newcapacity = {newcapacity}");
                                         //    (from rec in Dbq.LoadLevellingTable
                                         //     where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
-                                        //     select rec).ToList().ForEach(r => r.g = newcapacity);
+                                        //     select rec).TableToList().ForEach(r => r.g = newcapacity);
 
                                         //    //(from rec in Dbq.LoadLevellingTable
                                         //    //    where rec.i == p && rec.j == f && rec.PRODUCTION_CATEGORY == pc
@@ -276,7 +276,7 @@ namespace LoadL.loadDatabase
                 //var newreq = new Random();
                 //Console.WriteLine($"START correzione valori di required == 0 : {DateTime.Now:dd.MM.yyyy-HH:mm:ss.fff}");
 
-                //(from rec in Dbq.LoadLevellingTable where Math.Abs(rec.h) < Global.EPSILON select rec).ToList().ForEach(r => r.h = newreq.Next(24,300));
+                //(from rec in Dbq.LoadLevellingTable where Math.Abs(rec.h) < Global.EPSILON select rec).TableToList().ForEach(r => r.h = newreq.Next(24,300));
                 //(from rec in Dbq.LoadLevellingTable where rec.h < 0.1 select rec).UpdateFromQuery(rec => new LoadLevelling {h = newreq.Next(24, 300)});
                 //Dbq.Save();
 

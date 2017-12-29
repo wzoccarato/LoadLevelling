@@ -85,6 +85,7 @@ namespace CalcExtendedLogics.Infrastructure.AccessLayer
         {
             _context.SaveChanges();
         }
+
         public void MassiveSaveData()
         {
             try
@@ -99,6 +100,14 @@ namespace CalcExtendedLogics.Infrastructure.AccessLayer
             
         }
 
+        /// <summary>
+        /// Aggiorna gli elementi della tabella LoadLevellings, 
+        /// contenuti nella lista passta in argomento
+        /// Attenzione che la funzione non esegue il salvataggio del dbcontext,
+        /// che deve essere eseguito esternamente
+        /// sei il record non esiste nella tabella, viene sollevata una eccezione
+        /// </summary>
+        /// <param name="list"></param>
         public void UpdateData(List<LoadLevelling> list)
         {
             try
@@ -107,9 +116,8 @@ namespace CalcExtendedLogics.Infrastructure.AccessLayer
                 {
                     _context.LoadLevellings.Attach(el);
                     _context.Entry(el).State = EntityState.Modified;
-                    _context.SaveChanges();
+                    //_context.SaveChanges();
                 }
-                _context.BulkUpdate(list);
             }
             catch (Exception e)
             {
@@ -119,6 +127,15 @@ namespace CalcExtendedLogics.Infrastructure.AccessLayer
 
         }
 
+
+        /// <summary>
+        /// Aggiorna gli elementi della tabella LoadLevellings, 
+        /// contenuti nella lista passta in argomento
+        /// Attenzione che la funzione non esegue il salvataggio del dbcontext,
+        /// che deve essere eseguito esternamente
+        /// Utilizza BulkUpdate di Z.EntityFramework.Extensions 
+        /// </summary>
+        /// <param name="list"></param>
         public void MassiveUpdateData(List<LoadLevelling> list)
         {
             try
@@ -130,9 +147,50 @@ namespace CalcExtendedLogics.Infrastructure.AccessLayer
                 Console.WriteLine(e);
                 throw;
             }
-
         }
 
+        /// <summary>
+        /// inserisce tutti gli elementi della lista nella tabella LoadLevellings
+        /// Attenzione che la funzione non esegue il salvataggio del dbcontext,
+        /// che deve essere eseguito esternamente
+        /// </summary>
+        /// <param name="list"></param>
+        public void AddData(List<LoadLevelling> list)
+        {
+            try
+            {
+                foreach (var el in list)
+                {
+                    _context.LoadLevellings.Add(el);
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// inserisce tutti gli elementi della lista nella tabella LoadLevellings
+        /// Attenzione che la funzione non esegue il salvataggio del dbcontext,
+        /// che deve essere eseguito esternamente
+        /// Utilizza BulkInsert di Z.EntityFramework.Extensions 
+        /// Attenzione che se il record esiste gia', viene sollevata una eccezione
+        /// </summary>
+        /// <param name="list"></param>
+        public void MassiveAddData(List<LoadLevelling> list)
+        {
+            try
+            {
+                _context.BulkInsert(list);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
 
         #endregion
 

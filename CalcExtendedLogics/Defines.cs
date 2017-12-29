@@ -8,17 +8,17 @@ namespace CalcExtendedLogics
     // che possono cambiare nome
     public enum LlAlias
     {
-        F1 = 7,
-        F2,
-        F3,
-        Ahead,
-        Late,
-        Priority,
-        Capacity,
-        Required,
-        PlanBu,
-        FlagHr,
-        Allocated
+        F1 = 7,     // a
+        F2,         // b
+        F3,         // c
+        Ahead,      // d
+        Late,       // e
+        Priority,   // f
+        Capacity,   // g
+        Required,   // h
+        PlanBu,     // i
+        FlagHr,     // j
+        Allocated   // k
     };
 
     public static class Global

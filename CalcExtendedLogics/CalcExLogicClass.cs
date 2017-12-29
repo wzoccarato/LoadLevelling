@@ -109,7 +109,9 @@ namespace CalcExtendedLogics
 
                         var allocatedElements = cexlc.OptimizeWorkload();
 
-                        //var allocated = allocatedElements.GetList().Where(r => r.ID == null).Select(r => r).ToList();
+                        //var allocated = allocatedElements.GetList().Where(r => r.ID == null).Select(r => r).TableToList();
+
+                        targetdt.Rows.Clear();
 
                         foreach (var el in allocatedElements.GetList())
                         {
@@ -172,7 +174,7 @@ namespace CalcExtendedLogics
             try
             {
                 // TODO: da togliere non appena sistemata la questione dei nomi dei campi della tabella Schema
-                // TODO: la funzione corretta è ConvertDataTable
+                // TODO: la funzione corretta è DataTableHelper.TableToList
                 _schema = ConvertSchemaDataTable<Schema>(schemadt);
 
                 // acquisisce i valori degli heading dalla tabella schema
@@ -261,22 +263,38 @@ namespace CalcExtendedLogics
 
                 // converte la tabella in List. Questa e' la copia di lavoro interna 
                 // della tabella
-                _iloadl.LoadLevellingWorkTable = ConvertDataTable<LoadLevellingWork>(loadlevellingdt).ToList();
+                //_iloadl.LoadLevellingWorkTable = ConvertDataTable<LoadLevellingWork>(loadlevellingdt).TableToList();
+                _iloadl.LoadLevellingWorkTable = DataTableHelper.TableToList<LoadLevellingWork>(loadlevellingdt).ToList();
                 //_loadLevelling = MapDataTable(loadlevellingdt);
 
                 // assegna alla tabella originale gli heading definitivi,
-                // quelli ricavati dalla tabella Schema
-                loadlevellingdt.Columns[Helper.Index["a"]].ColumnName = f1;
-                loadlevellingdt.Columns[Helper.Index["b"]].ColumnName = f2;
-                loadlevellingdt.Columns[Helper.Index["c"]].ColumnName = f3;
-                loadlevellingdt.Columns[Helper.Index["d"]].ColumnName = ahead;
-                loadlevellingdt.Columns[Helper.Index["e"]].ColumnName = late;
-                loadlevellingdt.Columns[Helper.Index["f"]].ColumnName = priority;
-                loadlevellingdt.Columns[Helper.Index["g"]].ColumnName = capacity;
-                loadlevellingdt.Columns[Helper.Index["h"]].ColumnName = required;
-                loadlevellingdt.Columns[Helper.Index["i"]].ColumnName = planBu;
-                loadlevellingdt.Columns[Helper.Index["j"]].ColumnName = flagHr;
-                loadlevellingdt.Columns[Helper.Index["k"]].ColumnName = allocated;
+                // quelli ricavati dalla tabella Schema 
+                //(serve veramente? per il momento ripristino i valori originali)
+                //loadlevellingdt.Columns[Helper.Index["a"]].ColumnName = f1;
+                //loadlevellingdt.Columns[Helper.Index["b"]].ColumnName = f2;
+                //loadlevellingdt.Columns[Helper.Index["c"]].ColumnName = f3;
+                //loadlevellingdt.Columns[Helper.Index["d"]].ColumnName = ahead;
+                //loadlevellingdt.Columns[Helper.Index["e"]].ColumnName = late;
+                //loadlevellingdt.Columns[Helper.Index["f"]].ColumnName = priority;
+                //loadlevellingdt.Columns[Helper.Index["g"]].ColumnName = capacity;
+                //loadlevellingdt.Columns[Helper.Index["h"]].ColumnName = required;
+                //loadlevellingdt.Columns[Helper.Index["i"]].ColumnName = planBu;
+                //loadlevellingdt.Columns[Helper.Index["j"]].ColumnName = flagHr;
+                //loadlevellingdt.Columns[Helper.Index["k"]].ColumnName = allocated;
+
+                // ripristino gli header originali. vedere se invece utilizzare gli header
+                // ricavati dalla tabella Schema, come nelle riche di codice che precedono.
+                loadlevellingdt.Columns[Helper.Index["a"]].ColumnName = "a";
+                loadlevellingdt.Columns[Helper.Index["b"]].ColumnName = "b";
+                loadlevellingdt.Columns[Helper.Index["c"]].ColumnName = "c";
+                loadlevellingdt.Columns[Helper.Index["d"]].ColumnName = "d";
+                loadlevellingdt.Columns[Helper.Index["e"]].ColumnName = "e";
+                loadlevellingdt.Columns[Helper.Index["f"]].ColumnName = "f";
+                loadlevellingdt.Columns[Helper.Index["g"]].ColumnName = "g";
+                loadlevellingdt.Columns[Helper.Index["h"]].ColumnName = "h";
+                loadlevellingdt.Columns[Helper.Index["i"]].ColumnName = "i";
+                loadlevellingdt.Columns[Helper.Index["j"]].ColumnName = "j";
+                loadlevellingdt.Columns[Helper.Index["k"]].ColumnName = "k";
             }
             catch (TraceException e)
             {
@@ -316,7 +334,7 @@ namespace CalcExtendedLogics
                 //                 };
 
                 // PLAN_BU
-                //_plan_bu = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => l.Key).ToList();
+                //_plan_bu = _loadLevelling.GroupBy(r => r.PLAN_BU).OrderByDescending(g => g.Count()).Select(l => l.Key).TableToList();
                 _planBu = _iloadl.GetDistinctPlanBu();
 
                 // sortedweek list contiene la lista sortata per week e per priorita'
@@ -327,7 +345,10 @@ namespace CalcExtendedLogics
                 ElementsList waitList = new ElementsList();
                 // contiene i record di richieste soddisfatte, cioe' 
                 // quelli il cui parametro Required e' arrivato a 0
+                // per ciacuna iterazione su planbu,
                 ElementsList fulfilledList = new ElementsList();
+                // questa invece contiene tutte le richieste soddisfatte, su piano globale
+                ElementsList totalFulfilled = new ElementsList();
 
 
                 foreach (var pbu in _planBu)
@@ -336,7 +357,7 @@ namespace CalcExtendedLogics
                     Helper.WriteMessage($"planbu = {pbu}");
 
                     // FLAG_HR
-                    //_flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).ToList();
+                    //_flag_hr = _loadLevelling.Where(r => r.PLAN_BU == rec).GroupBy(g => g.FLAG_HR).OrderByDescending(c => c.Count()).Select(l => l.Key).TableToList();
                     _flagHr = _iloadl.GetDistinctFlagHr(pbu);
 
                     // azzera le liste di lavoro
@@ -350,7 +371,7 @@ namespace CalcExtendedLogics
                         Helper.WriteMessage($"flaghr = {fhr}");
 
                         // PRODUCTION_CATEGORY
-                        //var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).ToList();
+                        //var prodCategory = _loadLevelling.Where(r => r.PLAN_BU == rec && r.FLAG_HR == fhr).GroupBy(g => g.PRODUCTION_CATEGORY).Select(l => l.Key).TableToList();
                         var prodCategory = _iloadl.GetDistinctProductionCategory(pbu, fhr);
 
                         foreach (var pc in prodCategory)
@@ -358,7 +379,7 @@ namespace CalcExtendedLogics
                             Helper.WriteMessage($"Production_category = {pc}");
 
                             // ordina per Week e poi per Priority
-                            //var sortedtable = ll.OrderBy(g => g.Week).ThenBy(h => h.Priority).ToList();
+                            //var sortedtable = ll.OrderBy(g => g.Week).ThenBy(h => h.Priority).TableToList();
 
                             // tutti gli elementi con plan_bu, flag_hr e production_category,
                             // sortati per week_plan e poi per priority, vengono aggiunti alla sortedweeklist
@@ -390,9 +411,10 @@ namespace CalcExtendedLogics
                         }
                     }
                     // qui la lista delle allocazioni e' completa
+                    totalFulfilled.AddRange(fulfilledList.GetList());
 
                 }
-                return fulfilledList;
+                return totalFulfilled;
             }
             catch (TraceException e)
             {
@@ -738,7 +760,7 @@ namespace CalcExtendedLogics
                         if (toappend.Count > 0)
                         {
                             appendedrequests.AddRange(toappend.GetList());
-                            Helper.WriteMessage($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
+                            Helper.WriteMessage($"{fname} - Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                             toappend.Purge();
                         }
                     }
@@ -880,7 +902,7 @@ namespace CalcExtendedLogics
                             if (toappend.Count > 0)
                             {
                                 appendedrequests.AddRange(toappend.GetList());
-                                Helper.WriteMessage($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
+                                Helper.WriteMessage($"{fname} - Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                                 toappend.Purge();
                             }
                         }
@@ -1025,7 +1047,7 @@ namespace CalcExtendedLogics
                             if (toappend.Count > 0)
                             {
                                 appendedrequests.AddRange(toappend.GetList());
-                                Helper.WriteMessage($"Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
+                                Helper.WriteMessage($"{fname} - Week: {toappend.GetFirst().Week} Allocati: {appendedrequests.Count}");
                                 toappend.Purge();
                             }
                             
@@ -1084,16 +1106,16 @@ namespace CalcExtendedLogics
         /// <typeparam name="T"></typeparam>
         /// <param name="dt"></param>
         /// <returns></returns>
-        private IList<T> ConvertDataTable<T>(DataTable dt)
-        {
-            IList<T> data = new Collection<T>();
-            foreach (DataRow row in dt.Rows)
-            {
-                T item = GetItem<T>(row);
-                data.Add(item);
-            }
-            return data;
-        }
+        //private IList<T> ConvertDataTable<T>(DataTable dt) where T:new()
+        //{
+        //    IList<T> data = new Collection<T>();
+        //    foreach (DataRow row in dt.Rows)
+        //    {
+        //        var item = GetItem<T>(row);
+        //        data.Add(item);
+        //    }
+        //    return data;
+        //}
 
         /// <summary>
         /// utilizza Reflection per popolare le proprieta'
@@ -1102,52 +1124,52 @@ namespace CalcExtendedLogics
         /// <typeparam name="T"></typeparam>
         /// <param name="dr"></param>
         /// <returns></returns>
-        private T GetItem<T>(DataRow dr)
-        {
-            Type temp = typeof(T);
-            T obj = Activator.CreateInstance<T>();
+        //private T GetItem<T>(DataRow dr) where T: new()
+        //{
+        //    Type temp = typeof(T);
+        //    T item = new T();
 
-            foreach (DataColumn column in dr.Table.Columns)
-            {
-                foreach (PropertyInfo pro in temp.GetProperties())
-                {
-                    if (pro.Name != column.ColumnName) continue;
-                    //var value = dr[column.ColumnName] is DBNull ? string.Empty : dr[column.ColumnName].ToString();
-                    var value = dr[column.ColumnName];
-                    if (value is DBNull)
-                    {
-                        if (pro.PropertyType == typeof(double))
-                        {
-                            pro.SetValue(obj,0,null);
-                        }
-                        else if (pro.PropertyType == typeof(int))
-                        {
-                            pro.SetValue(obj, 0, null);
-                        }
-                        else if (pro.PropertyType == typeof(string))
-                        {
-                            pro.SetValue(obj, string.Empty, null);
-                        }
-                        else
-                        {
-                            pro.SetValue(obj, null, null);
-                        }
-                    }
-                    else
-                    {
-                        pro.SetValue(obj, value, null);
-                    }
-                    break;
-                }
-            }
-            return obj;
-        }
+        //    foreach (DataColumn column in dr.Table.Columns)
+        //    {
+        //        foreach (PropertyInfo pro in temp.GetProperties())
+        //        {
+        //            if (pro.Name != column.ColumnName) continue;
+        //            //var value = dr[column.ColumnName] is DBNull ? string.Empty : dr[column.ColumnName].ToString();
+        //            var value = dr[column.ColumnName];
+        //            if (value is DBNull)
+        //            {
+        //                if (pro.PropertyType == typeof(double))
+        //                {
+        //                    pro.SetValue(item, 0,null);
+        //                }
+        //                else if (pro.PropertyType == typeof(int))
+        //                {
+        //                    pro.SetValue(item, 0, null);
+        //                }
+        //                else if (pro.PropertyType == typeof(string))
+        //                {
+        //                    pro.SetValue(item, string.Empty, null);
+        //                }
+        //                else
+        //                {
+        //                    pro.SetValue(item, null, null);
+        //                }
+        //            }
+        //            else
+        //            {
+        //                pro.SetValue(item, value, null);
+        //            }
+        //            break;
+        //        }
+        //    }
+        //    return item;
+        //}
 
         /// <summary>
         /// Converte l'oggetto DataTable passato in argomento 
         /// in una collection di cui ritorna l'interfaccia IList.
         /// TODO: togliere questa non appena sistemata la questione relativa al nome dei campi nella tabella Schema
-        /// TODO: la funzione corretta è ConvertDataTable
+        /// TODO: la funzione corretta è DataTableHelper.TableToList
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="dt"></param>
