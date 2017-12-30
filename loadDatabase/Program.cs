@@ -159,8 +159,8 @@ namespace LoadL.loadDatabase
                             val1 = Math.Round(val1, Global.ROUNDDIGITS);
                             val2 = Math.Round(val2, Global.ROUNDDIGITS);
 
-                            ch[10] = ch[10].Replace(',', '.');  // capacity converte virgola decimale in punto
-                            ch[11] = ch[11].Replace(',', '.');  // required converte virgola decimale in punto
+                            //ch[10] = ch[10].Replace(',', '.');  // capacity converte virgola decimale in punto
+                            //ch[11] = ch[11].Replace(',', '.');  // required converte virgola decimale in punto
                             if (ch[12] == "'")
                                 ch[12] += $"{planbu[simula.Next(3)]}";   // plan_bu
                             if (ch[13] == "'")

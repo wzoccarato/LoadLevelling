@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2009
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CalcExtendedLogics", "CalcExtendedLogics\CalcExtendedLogics.csproj", "{DA9F66A2-C73D-42D8-BEA5-7CD09BB49700}"
 EndProject
@@ -66,5 +66,11 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1D436514-4924-4C06-AB29-6CBE2B2E0384}
+	EndGlobalSection
+	GlobalSection(AutomaticVersions) = postSolution
+		UpdateAssemblyVersion = False
+		UpdateAssemblyFileVersion = False
+		UpdateAssemblyInfoVersion = False
+		AdvancedSettingsExpanded = True
 	EndGlobalSection
 EndGlobal

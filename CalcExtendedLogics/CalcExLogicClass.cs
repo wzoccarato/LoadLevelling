@@ -722,7 +722,7 @@ namespace CalcExtendedLogics
                                         LoadLevellingWork newel = el.Clone();
                                         newel.TCH_WEEK = el.Week;
                                         newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
-                                        newel.Required = el.Required;
+                                        newel.Required = Math.Round(el.Required,Global.ROUNDDIGITS);
                                         newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
                                         toappend.AddElement(newel);
 
@@ -743,8 +743,8 @@ namespace CalcExtendedLogics
 
                                         LoadLevellingWork newel = el.Clone();
                                         newel.TCH_WEEK = el.Week;
-                                        newel.Allocated = el.Allocated;
-                                        newel.Required = el.Required;
+                                        newel.Allocated = Math.Round(el.Allocated,Global.ROUNDDIGITS);
+                                        newel.Required = Math.Round(el.Required,Global.ROUNDDIGITS);
                                         newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
                                         toappend.AddElement(newel);
 
@@ -864,7 +864,7 @@ namespace CalcExtendedLogics
                                             LoadLevellingWork newel = el.Clone();
                                             newel.TCH_WEEK = w.Week;
                                             newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
-                                            newel.Required = w.Required;
+                                            newel.Required = Math.Round(w.Required,Global.ROUNDDIGITS);
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
                                             toappend.AddElement(newel);
 
@@ -885,8 +885,10 @@ namespace CalcExtendedLogics
                                                 
                                             LoadLevellingWork newel = el.Clone();
                                             newel.TCH_WEEK = w.Week;
-                                            newel.Allocated = el.Allocated;
-                                            newel.Required = w.Required;
+
+                                            newel.Allocated = Math.Round(el.Allocated, Global.ROUNDDIGITS);
+                                            newel.Required = Math.Round(w.Required, Global.ROUNDDIGITS);
+
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
                                             toappend.AddElement(newel);
 
@@ -1009,7 +1011,7 @@ namespace CalcExtendedLogics
                                             LoadLevellingWork newel = el.Clone();
                                             newel.TCH_WEEK = h.Week;
                                             newel.Allocated = Math.Round(toallocate, Global.ROUNDDIGITS);
-                                            newel.Required = h.Required;
+                                            newel.Required = Math.Round(h.Required,Global.ROUNDDIGITS);
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
                                             toappend.AddElement(newel);
 
@@ -1030,8 +1032,8 @@ namespace CalcExtendedLogics
 
                                             LoadLevellingWork newel = el.Clone();
                                             newel.TCH_WEEK = h.Week;
-                                            newel.Allocated = el.Allocated;
-                                            newel.Required = h.Required;
+                                            newel.Allocated = Math.Round(el.Allocated,Global.ROUNDDIGITS);
+                                            newel.Required = Math.Round(h.Required,Global.ROUNDDIGITS);
                                             newel.Capacity = 0; // la capacity del nuovo elemento la impongo a 0 
                                             toappend.AddElement(newel);
 
