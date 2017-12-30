@@ -109,8 +109,8 @@ namespace LoadL.loadDatabase
                                     val2 = Convert.ToDouble(ch[11].Substring(1));
 
                                     // arrotonda capacity e required
-                                    Math.Round(val1, Global.ROUNDDIGITS);
-                                    Math.Round(val2, Global.ROUNDDIGITS);
+                                    val1 = Math.Round(val1, Global.ROUNDDIGITS);
+                                    val2 = Math.Round(val2, Global.ROUNDDIGITS);
 
                                     ch[10] = ch[10].Replace(',', '.');      // capacity converte virgola decimale in punto
                                     ch[11] = ch[11].Replace(',', '.');      // required converte virgola decimale in punto
@@ -121,9 +121,11 @@ namespace LoadL.loadDatabase
 
 
                                     // vengono tenuti in considerazione soltanto i record per i quali capacity && required non sono entrambi a zero
-                                    if ((Math.Abs(val1) >= Global.EPSILON) || (Math.Abs(val2) >= Global.EPSILON))
+                                    //if ((Math.Abs(val1) >= Global.EPSILON) || (Math.Abs(val2) >= Global.EPSILON))
+                                    if ((Math.Abs(val2) >= Global.EPSILON))
                                     {
-                                        newline = $"({ch[1]}',{ch[2]}',{ch[3]}',{ch[4]}',{ch[5]}',{ch[6]}','0','0','0',{ch[7]}',{ch[8]}',{ch[9]}',{ch[10]}',{ch[11]}',{ch[12]}',{ch[13]}',{ch[14]}";
+                                        //newline = $"({ch[1]}',{ch[2]}',{ch[3]}',{ch[4]}',{ch[5]}',{ch[6]}','0','0','0',{ch[7]}',{ch[8]}',{ch[9]}',{ch[10]}',{ch[11]}',{ch[12]}',{ch[13]}',{ch[14]}";
+                                        newline = $"({ch[1]}',{ch[2]}',{ch[3]}',{ch[4]}',{ch[5]}',{ch[6]}','0','0','0',{ch[7]}',{ch[8]}',{ch[9]}','{val1}','{val2}',{ch[12]}',{ch[13]}',{ch[14]}";
                                         sqlcmd = $"{sqlcmd}\n{newline}";
                                         //-- questa vale solo per il nuovo database acquisito direttamente da board 13.12.2017
 
@@ -153,6 +155,10 @@ namespace LoadL.loadDatabase
                             val1 = Convert.ToDouble(ch[10].Substring(1));      // toglie l'apice iniziale, devo confrontare i valori
                             val2 = Convert.ToDouble(ch[11].Substring(1));
 
+                            // arrotonda capacity e required
+                            val1 = Math.Round(val1, Global.ROUNDDIGITS);
+                            val2 = Math.Round(val2, Global.ROUNDDIGITS);
+
                             ch[10] = ch[10].Replace(',', '.');  // capacity converte virgola decimale in punto
                             ch[11] = ch[11].Replace(',', '.');  // required converte virgola decimale in punto
                             if (ch[12] == "'")
@@ -165,8 +171,14 @@ namespace LoadL.loadDatabase
                             // in questa invece scarto tutti i record che hanno required == 0
                             if (Math.Abs(val2) < Global.EPSILON) continue;
 
+                            var str1 = $"{val1}";
+                            var str2 = $"{val2}";
+                            str1 = str1.Replace(',', '.');  // capacity converte virgola decimale in punto
+                            str2 = str2.Replace(',', '.');  // required converte virgola decimale in punto
 
-                            newline = $"({ch[1]}',{ch[2]}',{ch[3]}',{ch[4]}',{ch[5]}',{ch[6]}','0','0','0',{ch[7]}',{ch[8]}',{ch[9]}',{ch[10]}',{ch[11]}',{ch[12]}',{ch[13]}',{ch[14]}";
+                            //newline = $"({ch[1]}',{ch[2]}',{ch[3]}',{ch[4]}',{ch[5]}',{ch[6]}','0','0','0',{ch[7]}',{ch[8]}',{ch[9]}',{ch[10]}',{ch[11]}',{ch[12]}',{ch[13]}',{ch[14]}";
+                            newline = $"({ch[1]}',{ch[2]}',{ch[3]}',{ch[4]}',{ch[5]}',{ch[6]}','0','0','0',{ch[7]}',{ch[8]}',{ch[9]}','{str1}','{str2}',{ch[12]}',{ch[13]}',{ch[14]}";
+
                             //++count;
                             if (++count < 1000)
                                 newline += ",";
